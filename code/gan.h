@@ -7,6 +7,5 @@
 
 bool gan_start(uint16_t conn_handle);
 void gan_stop();
-void gan_setup();
 
 #endif // _GAN_H

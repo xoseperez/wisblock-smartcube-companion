@@ -21,7 +21,6 @@ void setup() {
 
     wdt_set(WDT_SECONDS);
     
-    gan_setup();
     bluetooth_setup();
     bluetooth_scan(true);
 

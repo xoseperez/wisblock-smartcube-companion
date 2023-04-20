@@ -31,83 +31,104 @@ BLEClientCharacteristic _gan_characteristic_v2_write(GAN_UUID_CHARACTERISTIC_V2_
 
 bool gan_decode(uint8_t* data, uint16_t len) {
 
-    uint8_t block[16];
-    uint8_t decoded[len] = {0};
-    
-    //int err = _gan_aes.Process((char*) decoded, 16, _gan_iv, _gan_key, 16, (char*) data, _gan_aes.decryptFlag, _gan_aes.ecbMode);
-    //AES aesDecryptor(_gan_key, _gan_iv, AES::AES_MODE_128, AES::CIPHER_DECRYPT);
-    //aesDecryptor.process(decoded, data, len);
-
     if (len > 16) {
         uint8_t offset = len - 16;
-        _gan_aes.decryptBlock(block, data + offset);    
+        _gan_aes.decryptBlock(data + offset, data + offset);
         for (uint8_t i=0; i<16; i++) {
-            decoded[i + offset] = block[i] ^ _gan_iv[i];
+            data[i + offset] ^= _gan_iv[i];
         }
     }
-    
-    _gan_aes.decryptBlock(decoded, data);
-    for (uint8_t i=0; i<16; i++) {
-        decoded[i] ^= _gan_iv[i];
-    }
 
-    memcpy(data, decoded, len);
+    _gan_aes.decryptBlock(data, data);
+    for (uint8_t i=0; i<16; i++) {
+        data[i] ^= _gan_iv[i];
+    }
+    
     return true;
 
 }
 
 bool gan_encode(uint8_t * data, uint16_t len) {
 
-    uint8_t block[16];
-    uint8_t encoded[len] = {0};
-
     for (uint8_t i=0; i<16; i++) {
         data[i] ^= _gan_iv[i];
     }
-    _gan_aes.encryptBlock(encoded, data);
+    _gan_aes.encryptBlock(data, data);
 
     if (len > 16) {
         uint8_t offset = len - 16;
         for (uint8_t i=0; i<16; i++) {
             data[i+offset] ^= _gan_iv[i];
         }
-        _gan_aes.encryptBlock(block, data + offset);    
-        for (uint8_t i=0; i<16; i++) {
-            encoded[i+offset] = block[i];
-        }
+        _gan_aes.encryptBlock(data + offset, data + offset);    
     }
     
-    memcpy(data, encoded, len);
-    
     return true;
+
 }
 
 void gan_data_callback(BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
 
-    #ifdef DEBUG
-        Serial.printf("[GAN] Data received (encoded): ");
-        for (uint16_t i=0; i<len; i++) {
-            Serial.printf("%02X", data[i]);
-        }
-        Serial.println();
-    #endif
+    static int16_t count_old = -1;
     
     if (gan_decode(data, len)) {
 
-        uint16_t mode = ((data[0] & 0x0F) << 4) + ((data[1] & 0xF0) >> 4);
-        #ifdef DEBUG
-            Serial.printf("[GAN] Message type: %d\n", mode);
+        #if DEBUG > 1
+            Serial.printf("[GAN] Received: ");
+            for (uint16_t i=0; i<len; i++) {
+                Serial.printf("%02X", data[i]);
+            }
+            Serial.println();
         #endif
+        
+        uint8_t mode = (data[0] & 0xF0) >> 4;
+        uint8_t count = ((data[0] & 0xF) << 4) + ((data[1] & 0xF0) >> 4);
+        
+        if (1 == mode) { // Gyro
+            // Nothing to do
 
-    } else {
+        } else if (2 == mode) { // Cube move
+            
+            // Do not process if already processed
+            if (count == count_old) return;
+            count_old = count;
+
+        } else if (4 == mode) { // Cube state
+
+            // Do not process if already processed
+            if (count == count_old) return;
+            count_old = count;
+
+        } else if (5 == mode) { // Hardware info
+            
+            char device[9] = {0};
+            memcpy(device, &data[5], 8);
+            bool gyro = (data[13] & 0x80) == 0x80;
+
+            #if DEBUG > 0
+                Serial.printf("[GAN] Hardware info message received\n");
+                Serial.printf("[GAN] Device name     : %s\n", device);
+                Serial.printf("[GAN] Hardware version: %d.%d\n", data[1], data[2]);
+                Serial.printf("[GAN] Software version: %d.%d\n", data[3], data[4]);
+                Serial.printf("[GAN] Gyro enabled    : %s\n", gyro ? "yes": "no");
+            #endif
+
+        } else if (9 == mode) { // Battery
+
+            #if DEBUG > 0
+                Serial.printf("[GAN] Battery         : %d%%\n", data[1]);
+            #endif
+
+        }
+
     }
 
 }
 
 void gan_data_send(uint8_t* data, uint16_t len) {
 
-    #ifdef DEBUG
-        Serial.printf("[GAN] Data sent (decoded): ");
+    #if DEBUG > 1
+        Serial.printf("[GAN] Sending: ");
         for (uint16_t i=0; i<len; i++) {
             Serial.printf("%02X", data[i]);
         }
@@ -138,7 +159,7 @@ void gan_init_decoder(uint8_t * mac) {
     // Set decryption key
     _gan_aes.setKey(_gan_key, 16);
 
-    #ifdef DEBUG
+    #if DEBUG > 0
         Serial.printf("[GAN] KEY: ");
         for (uint16_t i=0; i<16; i++) {
             Serial.printf("%02X", _gan_key[i]);
@@ -176,10 +197,14 @@ bool gan_start(uint16_t conn_handle) {
      // Discover GAN v2 data service (only one supported right now)
    _gan_service_v2_data.begin();
     if ( !_gan_service_v2_data.discover(conn_handle) ) {
-        Serial.println("[GAN] GAN v2 data service not found. Disconnecting.");
+        #if DEBUG > 0
+            Serial.println("[GAN] GAN v2 data service not found. Disconnecting.");
+        #endif
         return false;
     }
-    Serial.println("[GAN] GAN v2 data service found.");
+    #if DEBUG > 0
+        Serial.println("[GAN] GAN v2 data service found.");
+    #endif
 
     gan_get_mac(conn_handle, _gan_mac);
     gan_init_decoder(_gan_mac);
@@ -187,20 +212,28 @@ bool gan_start(uint16_t conn_handle) {
     // Discover GAN v2 write characteristic
     _gan_characteristic_v2_write.begin();
     if ( ! _gan_characteristic_v2_write.discover() ) {
-        Serial.println("[GAN] GAN v2 write characteristic not found. Disconnecting.");
+        #if DEBUG > 0
+            Serial.println("[GAN] GAN v2 write characteristic not found. Disconnecting.");
+        #endif
         return false;
     }
-    Serial.println("[GAN] GAN v2 write characteristic found.");
+    #if DEBUG > 0
+        Serial.println("[GAN] GAN v2 write characteristic found.");
+    #endif
 
     // Discover GAN v2 read characteristic
     _gan_characteristic_v2_read.setNotifyCallback(gan_data_callback);
     _gan_characteristic_v2_read.begin();
     if ( ! _gan_characteristic_v2_read.discover() ) {
-        Serial.println("[GAN] GAN v2 read characteristic not found. Disconnecting.");
+        #if DEBUG > 0
+            Serial.println("[GAN] GAN v2 read characteristic not found. Disconnecting.");
+        #endif
         return false;
     }
     _gan_characteristic_v2_read.enableNotify();
-    Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
+    #if DEBUG > 0
+        Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
+    #endif
 
     // Query the cube
     gan_data_send(GAN_GET_HARDWARE);
@@ -209,7 +242,4 @@ bool gan_start(uint16_t conn_handle) {
     
     return true;
     
-}
-
-void gan_setup() {
 }

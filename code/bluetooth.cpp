@@ -42,10 +42,6 @@ bool bluetooth_connected() {
 
 void bluetooth_scan_callback(ble_gap_evt_adv_report_t* report) {
 
-    Serial.printf("[BLE] Packet from ");
-    Serial.printBufferReverse(report->peer_addr.addr, 6, ':');
-    Serial.println();
-
     // Get device MAC
     char mac[6];
     for (unsigned char i=0; i<6; i++) {
@@ -75,7 +71,7 @@ void bluetooth_scan_callback(ble_gap_evt_adv_report_t* report) {
         memcpy(mac_values[free_slot], mac, 6);
         mac_time[free_slot] = millis();
         
-        #ifdef DEBUG
+        #if DEBUG > 0
 
             Serial.printf("[BLE] Packet from ");
             
@@ -118,7 +114,7 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
     _bluetooth_peer_addr[4] = ble_addr.addr[1];
     _bluetooth_peer_addr[5] = ble_addr.addr[0];
     
-    #ifdef DEBUG
+    #if DEBUG > 0
         Serial.printf("[BLE] Connected to %02X:%02X:%02X:%02X:%02X:%02X (%s)\n", 
             _bluetooth_peer_addr[0],_bluetooth_peer_addr[1],_bluetooth_peer_addr[2],
             _bluetooth_peer_addr[3],_bluetooth_peer_addr[4],_bluetooth_peer_addr[5],
@@ -141,7 +137,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     (void) conn_handle;
     (void) reason;
   
-    #ifdef DEBUG
+    #if DEBUG > 0
         // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION (0x16) is a normal termination 
         Serial.printf("[BLE] Disconnected, reason 0x%02X\n", reason);
     #endif
@@ -173,7 +169,7 @@ void bluetooth_scan(bool scan) {
         Bluefruit.Scanner.useActiveScan(false);        // Request scan response data
         Bluefruit.Scanner.start(0);                   // 0 = Don't stop scanning after n seconds
 
-        #ifdef DEBUG
+        #if DEBUG > 0
             Serial.println("[BLE] Start scanning");
         #endif
 
@@ -181,7 +177,7 @@ void bluetooth_scan(bool scan) {
         
         Bluefruit.Scanner.stop();
 
-        #ifdef DEBUG
+        #if DEBUG > 0
             Serial.println("[BLE] Stop scanning");
         #endif
 
@@ -211,7 +207,7 @@ void bluetooth_setup() {
     _bluetooth_local_addr[3] = (addr_low  >> 16) & 0xFF;
     _bluetooth_local_addr[4] = (addr_low  >>  8) & 0xFF;
     _bluetooth_local_addr[5] = (addr_low  >>  0) & 0xFF;
-    #ifdef DEBUG
+    #if DEBUG > 0
         Serial.printf("[BLE] Device addr: %02X:%02X:%02X:%02X:%02X:%02X\n", 
             _bluetooth_local_addr[0], _bluetooth_local_addr[1], _bluetooth_local_addr[2],
             _bluetooth_local_addr[3], _bluetooth_local_addr[4], _bluetooth_local_addr[5]
