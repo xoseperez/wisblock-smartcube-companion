@@ -9,16 +9,6 @@ char _utils_peer_version[10] = {0};
 bool _utils_sleeping = false;
 uint8_t _utils_peer_battery = 0;
 
-void utils_setup() {
-}
-
-bool charge_status() {
-}
-
-float battery_read() {
-    return 0;
-}
-
 void wdt_set(unsigned long seconds) {
     NRF_WDT->CONFIG         = 0x00;                 // Configure WDT to run when CPU is asleep
     NRF_WDT->CRV            = 32768 * seconds + 1;  // CRV = timeout * 32768 + 1
@@ -109,3 +99,18 @@ char * utils_get_peer_version() {
     return _utils_peer_version;
 }
 
+uint8_t utils_get_bit(uint8_t * data, uint16_t position) {
+    uint8_t byte = position >> 3;
+    uint8_t bit = 7 - (position & 0x07);
+    uint8_t value = (data[byte] >> bit) & 0x01;
+    return value;
+}
+
+uint16_t utils_get_bits(uint8_t * data, uint16_t position, uint8_t len) {
+    uint16_t value = 0;
+    for (uint8_t i=0; i<len; i++) {
+        uint8_t bit = position + i;
+        value = (value << 1) + utils_get_bit(data, bit);
+    }
+    return value;
+}

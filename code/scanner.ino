@@ -1,11 +1,3 @@
-#include <nrf.h>
-#include <nrf_nvic.h>
-#include <nrf_sdm.h>
-#include <nrf_soc.h>
-#include <bluefruit.h>
-#include "nrf_rtc.h"
-#include "nrf_timer.h"
-
 #include "config.h"
 #include "bluetooth.h"
 #include "gan.h"

@@ -5,6 +5,7 @@
 
 #include "config.h"
 #include "bluetooth.h"
+#include "utils.h"
 #include "gan.h"
 
 AESSmall128 _gan_aes;
@@ -13,6 +14,9 @@ bool _gan_init = false;
 uint8_t _gan_mac[8] = {0};
 uint8_t _gan_key[16] = {0};
 uint8_t _gan_iv[16] = {0};
+
+uint32_t _gan_start = 0;
+bool _gan_timer = 0;
 
 const uint8_t GAN_UUID_SERVICE_V2_DATA[] = { 0x79, 0x41, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x01, 0x00, 0x40, 0x6E };
 const uint8_t GAN_UUID_CHARACTERISTIC_V2_READ[] = { 0xE4, 0xCC, 0xDB, 0xE2, 0x2A, 0x2A, 0x2F, 0xA3, 0xE9, 0x11, 0x67, 0xCD, 0xB6, 0x4C, 0xBE, 0x28 };
@@ -23,6 +27,33 @@ uint8_t GAN_KEYS[4][16] = {
     { 67,226, 91,214,125,220,120,216,  7, 96,163,218,130, 60,  1,241},
     {  1,  2, 66, 40, 49,145, 22,  7, 32,  5, 24, 84, 66, 17, 18, 83},
     { 17,  3, 50, 40, 33,  1,118, 39, 32,149,120, 20, 50, 18,  2, 67}
+};
+const char FACES[] = "URFDLB";
+uint8_t SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
+uint8_t SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+uint8_t CORNER_FACELET[8][3] = {
+    {8, 9, 20}, // URF
+    {6, 18, 38}, // UFL 
+    {0, 36, 47}, // ULB
+    {2, 45, 11}, // UBR
+    {29, 26, 15}, // DFR
+    {27, 44, 24}, // DLF
+    {33, 53, 42}, // DBL
+    {35, 17, 51}  // DRB
+};
+uint8_t EDGE_FACELET[12][2] = {
+    {5, 10}, // UR
+    {7, 19}, // UF
+    {3, 37}, // UL
+    {1, 46}, // UB
+    {32, 16}, // DR
+    {28, 25}, // DF
+    {30, 43}, // DL
+    {34, 52}, // DB
+    {23, 12}, // FR
+    {21, 41}, // FL
+    {50, 39}, // BL
+    {48, 14}  // BR
 };
 
 BLEClientService _gan_service_v2_data(GAN_UUID_SERVICE_V2_DATA);
@@ -67,6 +98,46 @@ bool gan_encode(uint8_t * data, uint16_t len) {
 
 }
 
+void gan_to_cube(uint8_t * corners, uint8_t * edges) {
+
+    #if DEBUG>1
+        Serial.printf("[GAN] Corners: ");
+        for (uint16_t i=0; i<8; i++) {
+            Serial.printf("%d ", corners[i]);
+        }
+        Serial.println();
+        Serial.printf("[GAN] Edges: ");
+        for (uint16_t i=0; i<12; i++) {
+            Serial.printf("%d ", edges[i]);
+        }
+        Serial.println();
+    #endif
+
+    char facelets[55] = {0};
+    for (uint8_t i=0; i<54; i++) {
+        facelets[i] = FACES[int(i / 9)];
+    }
+    for (uint8_t c=0; c<8; c++) {
+        uint8_t j = corners[c] & 0x07;
+        uint8_t ori = corners[c] >> 3;
+        for (uint8_t n=0; n<3; n++) {
+            facelets[CORNER_FACELET[c][(n + ori) % 3]] = FACES[int(CORNER_FACELET[j][n] / 9)];
+        }
+    }
+    for (uint8_t e=0; e<12; e++) {
+        uint8_t j = edges[e] >> 1;
+        uint8_t ori = edges[e] & 0x01;
+        for (uint8_t n=0; n<2; n++) {
+            facelets[EDGE_FACELET[e][(n + ori) % 2]] = FACES[int(EDGE_FACELET[j][n] / 9)];
+        }
+    }
+
+    #if DEBUG>0
+        Serial.printf("[GAN] State: %s\n", facelets);
+    #endif
+
+}
+
 void gan_data_callback(BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
 
     static int16_t count_old = -1;
@@ -93,11 +164,80 @@ void gan_data_callback(BLEClientCharacteristic* chr, uint8_t* data, uint16_t len
             if (count == count_old) return;
             count_old = count;
 
+            uint16_t last4_sum = 0;
+            for (uint8_t i=0; i<4; i++) {
+
+                uint8_t turn = utils_get_bits(data, 12 + i*5, 5);
+                last4_sum += turn;
+
+                #if DEBUG > 0
+                    if (i==0) {
+                        Serial.print("[GAN] Movement: ");
+                        Serial.print(FACES[turn >> 1]);
+                        if (turn & 0x01) Serial.print("'");
+                        Serial.println();
+                    }
+                #endif
+
+            }
+            
+            if ((last4_sum == 0) & (!_gan_timer)) {
+                #if DEBUG > 0
+                    Serial.println("[GAN] 4 U turns in a row! Starting timer.");
+                #endif
+                _gan_timer = true;
+                _gan_start = millis();
+            }
+
         } else if (4 == mode) { // Cube state
 
-            // Do not process if already processed
-            if (count == count_old) return;
-            count_old = count;
+            #if DEBUG>1
+                Serial.printf("[GAN] Received: ");
+                for (uint16_t i=0; i<len; i++) {
+                    Serial.printf("%02X", data[i]);
+                }
+                Serial.println();
+            #endif
+
+            uint16_t echk = 0;
+            uint16_t cchk = 0xf00;
+            uint8_t cube_corners[8];
+            uint8_t cube_edges[12];
+            
+            for (uint8_t i=0; i<7; i++) {
+                uint8_t perm = utils_get_bits(data, 12 + i*3, 3);
+                uint8_t ori = utils_get_bits(data, 33 + i*2, 2);
+                cchk = (cchk - (ori << 3)) ^ perm;
+                cube_corners[i] = (ori << 3) + perm;
+            }   
+            cube_corners[7] = ((cchk & 0xff8) % 24) | (cchk & 0x7);
+
+            for (uint8_t i=0; i<11; i++) {
+                uint8_t perm = utils_get_bits(data, 47 + i*4, 4);
+                uint8_t ori = utils_get_bit(data, 91 + i);
+                echk = echk ^ ((perm << 1) | ori );
+                cube_edges[i] = (perm << 1) + ori;
+            }   
+            cube_edges[11] = echk;
+
+            if ((memcmp(SOLVED_CORNERS, cube_corners, 8) == 0) &&
+                (memcmp(SOLVED_EDGES, cube_edges, 12) == 0)) {
+
+                #if DEBUG>0
+                    Serial.println("[GAN] Solved!");
+                #endif
+
+                if (_gan_timer) {
+                    _gan_timer = false;
+                    float seconds = (millis() - _gan_start) / 1000.0;
+                    #if DEBUG>0
+                        Serial.printf("[GAN] Time: %7.3f seconds\n", seconds);
+                    #endif
+                }
+
+            }
+
+            gan_to_cube(cube_corners, cube_edges);
 
         } else if (5 == mode) { // Hardware info
             
@@ -189,7 +329,7 @@ void gan_get_mac(uint16_t conn_handle, uint8_t * mac) {
 }
 
 void gan_stop() {
-
+    _gan_characteristic_v2_read.disableNotify();
 }
 
 bool gan_start(uint16_t conn_handle) {

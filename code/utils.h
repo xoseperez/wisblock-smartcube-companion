@@ -8,16 +8,14 @@
 
 void sleep();
 
-void utils_setup();
-
-float battery_read();
-bool charge_status();
 char * utils_device_name();
-
 void utils_set_peer_battery(uint8_t);
 uint8_t utils_get_peer_battery();
 void utils_set_peer_version(char * version);
 char * utils_get_peer_version();
+
+uint8_t utils_get_bit(uint8_t * data, uint16_t position);
+uint16_t utils_get_bits(uint8_t * data, uint16_t position, uint8_t len);
 
 void wdt_set(unsigned long seconds);
 void wdt_feed();
