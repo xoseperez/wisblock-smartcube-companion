@@ -328,6 +328,9 @@ bool ganv2_start(uint16_t conn_handle) {
     // Set up encoder
     ganv2_init_aes128();
 
+    // Clear display
+    display_clear();
+
     // Query the cube
     ganv2_data_send(GANV2_GET_HARDWARE);
     ganv2_data_send(GANV2_GET_FACELETS);

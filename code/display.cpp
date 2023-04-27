@@ -115,8 +115,20 @@ void display_update_cube(char * cubelets) {
 
 }
 
+void display_clear() {
+    display_tft.fillScreen(ST77XX_BLACK);
+}
+
 void display_show_cube() {
     display_draw_bmp(&bmp_cube_info, 60, 20);
+}
+
+void display_show_intro() {
+    display_draw_bmp(&bmp_cube_info, 60, 20);
+    display_tft.setCursor(230, 220);
+    display_tft.setTextColor(ST77XX_WHITE);
+    display_tft.setTextSize(0);
+    display_tft.println("CONNECTING...");    
 }
 
 void display_setup(void) {
@@ -129,11 +141,13 @@ void display_setup(void) {
 
     display_tft.init(240, 320); // Init ST7789 240x240.
     display_tft.setRotation(1);
-    display_tft.fillScreen(ST77XX_BLACK);
 
     #if DEBUG > 0
         Serial.printf("[TFT] Initialized\n");
     #endif
+
+    display_clear();
+    display_show_intro();
 
 }
 
