@@ -12,10 +12,10 @@
 uint32_t _ganv2_start = 0;
 bool _ganv2_timer = 0;
 
-static const char FACES[] = "URFDLB";
-static const uint8_t SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
-static const uint8_t SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
-static const uint8_t CORNER_FACELET[8][3] = {
+static const char GANV2_FACES[] = "URFDLB";
+static const uint8_t GANV2_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
+static const uint8_t GANV2_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+static const uint8_t GANV2_CORNER_FACELET[8][3] = {
     {8, 9, 20}, // URF
     {6, 18, 38}, // UFL 
     {0, 36, 47}, // ULB
@@ -25,7 +25,7 @@ static const uint8_t CORNER_FACELET[8][3] = {
     {33, 53, 42}, // DBL
     {35, 17, 51}  // DRB
 };
-static const uint8_t EDGE_FACELET[12][2] = {
+static const uint8_t GANV2_EDGE_FACELET[12][2] = {
     {5, 10}, // UR
     {7, 19}, // UF
     {3, 37}, // UL
@@ -90,20 +90,20 @@ void ganv2_to_cube(uint8_t * corners, uint8_t * edges) {
 
     char facelets[55] = {0};
     for (uint8_t i=0; i<54; i++) {
-        facelets[i] = FACES[int(i / 9)];
+        facelets[i] = GANV2_FACES[int(i / 9)];
     }
     for (uint8_t c=0; c<8; c++) {
         uint8_t j = corners[c] & 0x07;
         uint8_t ori = corners[c] >> 3;
         for (uint8_t n=0; n<3; n++) {
-            facelets[CORNER_FACELET[c][(n + ori) % 3]] = FACES[int(CORNER_FACELET[j][n] / 9)];
+            facelets[GANV2_CORNER_FACELET[c][(n + ori) % 3]] = GANV2_FACES[int(GANV2_CORNER_FACELET[j][n] / 9)];
         }
     }
     for (uint8_t e=0; e<12; e++) {
         uint8_t j = edges[e] >> 1;
         uint8_t ori = edges[e] & 0x01;
         for (uint8_t n=0; n<2; n++) {
-            facelets[EDGE_FACELET[e][(n + ori) % 2]] = FACES[int(EDGE_FACELET[j][n] / 9)];
+            facelets[GANV2_EDGE_FACELET[e][(n + ori) % 2]] = GANV2_FACES[int(GANV2_EDGE_FACELET[j][n] / 9)];
         }
     }
 
@@ -150,7 +150,7 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
                 #if DEBUG > 0
                     if (i==0) {
                         Serial.print("[GAN] Movement: ");
-                        Serial.print(FACES[turn >> 1]);
+                        Serial.print(GANV2_FACES[turn >> 1]);
                         if (turn & 0x01) Serial.print("'");
                         Serial.println();
                     }
@@ -197,8 +197,8 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
             }   
             cube_edges[11] = echk;
 
-            if ((memcmp(SOLVED_CORNERS, cube_corners, 8) == 0) &&
-                (memcmp(SOLVED_EDGES, cube_edges, 12) == 0)) {
+            if ((memcmp(GANV2_SOLVED_CORNERS, cube_corners, 8) == 0) &&
+                (memcmp(GANV2_SOLVED_EDGES, cube_edges, 12) == 0)) {
 
                 #if DEBUG>0
                     Serial.println("[GAN] Solved!");
@@ -271,23 +271,23 @@ const uint8_t GANV2_UUID_SERVICE_DATA[] = { 0x79, 0x41, 0xDC, 0x24, 0x0E, 0xE5, 
 const uint8_t GANV2_UUID_CHARACTERISTIC_READ[] = { 0xE4, 0xCC, 0xDB, 0xE2, 0x2A, 0x2A, 0x2F, 0xA3, 0xE9, 0x11, 0x67, 0xCD, 0xB6, 0x4C, 0xBE, 0x28 };
 const uint8_t GANV2_UUID_CHARACTERISTIC_WRITE[] = { 0xE4, 0xCC, 0xDB, 0xE2, 0x2A, 0x2A, 0x2F, 0xA3, 0xE9, 0x11, 0x67, 0xCD, 0x4A, 0x4A, 0xBE, 0x28 };
 
-BLEClientService _ganv2_service_v2_data(GANV2_UUID_SERVICE_DATA);
-BLEClientCharacteristic _ganv2_characteristic_v2_read(GANV2_UUID_CHARACTERISTIC_READ);
-BLEClientCharacteristic _ganv2_characteristic_v2_write(GANV2_UUID_CHARACTERISTIC_WRITE);
+BLEClientService _ganv2_service_data(GANV2_UUID_SERVICE_DATA);
+BLEClientCharacteristic _ganv2_characteristic_read(GANV2_UUID_CHARACTERISTIC_READ);
+BLEClientCharacteristic _ganv2_characteristic_write(GANV2_UUID_CHARACTERISTIC_WRITE);
 
 void ganv2_data_send_raw(uint8_t* data, uint16_t len) {
-    _ganv2_characteristic_v2_write.write(data, len);
+    _ganv2_characteristic_write.write(data, len);
 }
 
 void ganv2_stop() {
-    _ganv2_characteristic_v2_read.disableNotify();
+    _ganv2_characteristic_read.disableNotify();
 }
 
 bool ganv2_start(uint16_t conn_handle) {
 
      // Discover GAN v2 data service (only one supported right now)
-   _ganv2_service_v2_data.begin();
-    if ( !_ganv2_service_v2_data.discover(conn_handle) ) {
+   _ganv2_service_data.begin();
+    if ( !_ganv2_service_data.discover(conn_handle) ) {
         #if DEBUG > 0
             Serial.println("[GAN] GAN v2 data service not found. Disconnecting.");
         #endif
@@ -298,8 +298,8 @@ bool ganv2_start(uint16_t conn_handle) {
     #endif
 
     // Discover GAN v2 write characteristic
-    _ganv2_characteristic_v2_write.begin();
-    if ( ! _ganv2_characteristic_v2_write.discover() ) {
+    _ganv2_characteristic_write.begin();
+    if ( ! _ganv2_characteristic_write.discover() ) {
         #if DEBUG > 0
             Serial.println("[GAN] GAN v2 write characteristic not found. Disconnecting.");
         #endif
@@ -310,17 +310,17 @@ bool ganv2_start(uint16_t conn_handle) {
     #endif
 
     // Discover GAN v2 read characteristic
-    _ganv2_characteristic_v2_read.begin();
-    if ( ! _ganv2_characteristic_v2_read.discover() ) {
+    _ganv2_characteristic_read.begin();
+    if ( ! _ganv2_characteristic_read.discover() ) {
         #if DEBUG > 0
             Serial.println("[GAN] GAN v2 read characteristic not found. Disconnecting.");
         #endif
         return false;
     }
-    _ganv2_characteristic_v2_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
+    _ganv2_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
         ganv2_data_callback(data, len);
     });
-    _ganv2_characteristic_v2_read.enableNotify();
+    _ganv2_characteristic_read.enableNotify();
     #if DEBUG > 0
         Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
     #endif

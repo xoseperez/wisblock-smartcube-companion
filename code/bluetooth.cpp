@@ -4,6 +4,7 @@
 #include "config.h"
 #include "bluetooth.h"
 #include "ganv2.h"
+#include "giiker.h"
 
 #define MACS_MAX 20
 unsigned char mac_values[MACS_MAX][6];
@@ -125,6 +126,9 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
     if (ganv2_start(conn_handle)) {
         _bluetooth_handle = conn_handle;
         _bluetooth_connected = true;
+    } else if (giiker_start(conn_handle)) {
+        _bluetooth_handle = conn_handle;
+        _bluetooth_connected = true;
     } else {
         connection->disconnect();
         bluetooth_scan(true);
@@ -143,7 +147,8 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     #endif
 
     _bluetooth_connected = false;
-    ganv2_stop();
+    //ganv2_stop();
+    //giiker_stop();
 
 }
 
