@@ -131,6 +131,25 @@ void display_show_intro() {
     display_tft.println("CONNECTING...");    
 }
 
+void display_timer(uint8_t min, uint8_t sec, uint16_t ms) {
+
+    char buffer[10];
+    sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
+
+    display_tft.setCursor(175, 180);
+    display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    display_tft.setTextSize(2);
+    display_tft.println(buffer);    
+
+}
+
+void display_ready() {
+    display_tft.setCursor(175, 180);
+    display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    display_tft.setTextSize(2);
+    display_tft.println("READY...  ");    
+}
+
 void display_setup(void) {
   
     pinMode(WB_IO2, OUTPUT);
