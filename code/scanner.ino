@@ -1,7 +1,7 @@
 #include "config.h"
 #include "bluetooth.h"
-#include "gan.h"
 #include "utils.h"
+#include "display.h"
 
 void setup() {
     
@@ -15,6 +15,7 @@ void setup() {
     
     bluetooth_setup();
     bluetooth_scan(true);
+    display_setup();
 
 }
 

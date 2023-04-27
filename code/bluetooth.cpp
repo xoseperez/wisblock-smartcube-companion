@@ -3,7 +3,7 @@
 
 #include "config.h"
 #include "bluetooth.h"
-#include "gan.h"
+#include "ganv2.h"
 
 #define MACS_MAX 20
 unsigned char mac_values[MACS_MAX][6];
@@ -122,7 +122,7 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
         );
     #endif
 
-    if (gan_start(conn_handle)) {
+    if (ganv2_start(conn_handle)) {
         _bluetooth_handle = conn_handle;
         _bluetooth_connected = true;
     } else {
@@ -143,7 +143,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     #endif
 
     _bluetooth_connected = false;
-    gan_stop();
+    ganv2_stop();
 
 }
 
