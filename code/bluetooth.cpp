@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "bluetooth.h"
+#include "display.h"
 #include "ganv2.h"
 #include "giiker.h"
 
@@ -133,6 +134,8 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
         connection->disconnect();
         bluetooth_scan(true);
     }
+
+    if (_bluetooth_connected)  display_clear();
 
 }
 

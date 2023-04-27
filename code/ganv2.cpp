@@ -3,18 +3,11 @@
 #include <bluefruit.h>
 
 #include "bluetooth.h"
-#include "config.h"
 #include "utils.h"
+#include "cube.h"
 #include "ganv2.h"
-#include "display.h"
 #include "crypto.h"
 
-uint32_t _ganv2_start = 0;
-bool _ganv2_timer = 0;
-
-static const char GANV2_FACES[] = "URFDLB";
-static const uint8_t GANV2_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
-static const uint8_t GANV2_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
 static const uint8_t GANV2_CORNER_FACELET[8][3] = {
     {8, 9, 20}, // URF
     {6, 18, 38}, // UFL 
@@ -73,48 +66,6 @@ void ganv2_init_aes128() {
 // 
 // ----------------------------------------------------------------------------
 
-void ganv2_to_cube(uint8_t * corners, uint8_t * edges) {
-
-    #if DEBUG>1
-        Serial.printf("[GAN] Corners: ");
-        for (uint16_t i=0; i<8; i++) {
-            Serial.printf("%d ", corners[i]);
-        }
-        Serial.println();
-        Serial.printf("[GAN] Edges: ");
-        for (uint16_t i=0; i<12; i++) {
-            Serial.printf("%d ", edges[i]);
-        }
-        Serial.println();
-    #endif
-
-    char facelets[55] = {0};
-    for (uint8_t i=0; i<54; i++) {
-        facelets[i] = GANV2_FACES[int(i / 9)];
-    }
-    for (uint8_t c=0; c<8; c++) {
-        uint8_t j = corners[c] & 0x07;
-        uint8_t ori = corners[c] >> 3;
-        for (uint8_t n=0; n<3; n++) {
-            facelets[GANV2_CORNER_FACELET[c][(n + ori) % 3]] = GANV2_FACES[int(GANV2_CORNER_FACELET[j][n] / 9)];
-        }
-    }
-    for (uint8_t e=0; e<12; e++) {
-        uint8_t j = edges[e] >> 1;
-        uint8_t ori = edges[e] & 0x01;
-        for (uint8_t n=0; n<2; n++) {
-            facelets[GANV2_EDGE_FACELET[e][(n + ori) % 2]] = GANV2_FACES[int(GANV2_EDGE_FACELET[j][n] / 9)];
-        }
-    }
-
-    #if DEBUG>0
-        Serial.printf("[GAN] State: %s\n", facelets);
-    #endif
-
-    display_update_cube(facelets);
-
-}
-
 void ganv2_data_callback(uint8_t* data, uint16_t len) {
 
     static int16_t count_old = -1;
@@ -141,40 +92,11 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
             if (count == count_old) return;
             count_old = count;
 
-            uint16_t last4_sum = 0;
-            for (uint8_t i=0; i<4; i++) {
-
-                uint8_t turn = utils_get_bits(data, 12 + i*5, 5);
-                last4_sum += turn;
-
-                #if DEBUG > 0
-                    if (i==0) {
-                        Serial.print("[GAN] Movement: ");
-                        Serial.print(GANV2_FACES[turn >> 1]);
-                        if (turn & 0x01) Serial.print("'");
-                        Serial.println();
-                    }
-                #endif
-
-            }
-            
-            if ((last4_sum == 0) & (!_ganv2_timer)) {
-                #if DEBUG > 0
-                    Serial.println("[GAN] 4 U turns in a row! Starting timer.");
-                #endif
-                _ganv2_timer = true;
-                _ganv2_start = millis();
-            }
+            // Moves
+            uint8_t turn = utils_get_bits(data, 12, 5);
+            cube_move(turn >> 1, turn & 0x01);
 
         } else if (4 == mode) { // Cube state
-
-            #if DEBUG>1
-                Serial.printf("[GAN] Received: ");
-                for (uint16_t i=0; i<len; i++) {
-                    Serial.printf("%02X", data[i]);
-                }
-                Serial.println();
-            #endif
 
             uint16_t echk = 0;
             uint16_t cchk = 0xf00;
@@ -197,24 +119,12 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
             }   
             cube_edges[11] = echk;
 
-            if ((memcmp(GANV2_SOLVED_CORNERS, cube_corners, 8) == 0) &&
-                (memcmp(GANV2_SOLVED_EDGES, cube_edges, 12) == 0)) {
+            // Solved?
+            cube_solved(cube_corners, cube_edges);
 
-                #if DEBUG>0
-                    Serial.println("[GAN] Solved!");
-                #endif
+            // State
+            cube_state(cube_corners, cube_edges, GANV2_CORNER_FACELET, GANV2_EDGE_FACELET);
 
-                if (_ganv2_timer) {
-                    _ganv2_timer = false;
-                    float seconds = (millis() - _ganv2_start) / 1000.0;
-                    #if DEBUG>0
-                        Serial.printf("[GAN] Time: %7.3f seconds\n", seconds);
-                    #endif
-                }
-
-            }
-
-            ganv2_to_cube(cube_corners, cube_edges);
 
         } else if (5 == mode) { // Hardware info
             
@@ -327,9 +237,6 @@ bool ganv2_start(uint16_t conn_handle) {
 
     // Set up encoder
     ganv2_init_aes128();
-
-    // Clear display
-    display_clear();
 
     // Query the cube
     ganv2_data_send(GANV2_GET_HARDWARE);

@@ -1,21 +1,12 @@
 #include <Arduino.h>
-#include <AES.h>
 #include <bluefruit.h>
 
 #include "bluetooth.h"
-#include "config.h"
-#include "utils.h"
+#include "cube.h"
 #include "giiker.h"
-#include "display.h"
 
-uint32_t _giiker_start = 0;
-bool _giiker_timer = 0;
-
-static const char GIIKER_FACES[] = "URFDLB";
-static const char GIIKER_MOVES[] = "BDLURF";
-static const uint8_t GIIKER_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
-static const uint8_t GIIKER_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
-static const uint8_t GIIKER_CORNER_FACELET[8][3] = {
+static const uint8_t GIIKER_FACE_MAP[] = {5, 3, 4, 0, 1, 2};
+static const unsigned char GIIKER_CORNER_FACELET[8][3] = {
 	{26, 15, 29},
 	{20, 8, 9},
 	{18, 38, 6},
@@ -25,7 +16,7 @@ static const uint8_t GIIKER_CORNER_FACELET[8][3] = {
 	{47, 0, 36},
 	{53, 42, 3}
 };
-static const uint8_t GIIKER_EDGE_FACELET[12][2] = {
+static const unsigned char GIIKER_EDGE_FACELET[12][2] = {
 	{25, 28},
 	{23, 12},
 	{19, 7},
@@ -45,48 +36,6 @@ static const uint8_t GIIKER_KEY[] = { 176, 81, 104, 224, 86, 137, 237, 119, 38, 
 // ----------------------------------------------------------------------------
 // 
 // ----------------------------------------------------------------------------
-
-void giiker_to_cube(uint8_t * corners, uint8_t * edges) {
-
-    #if DEBUG>1
-        Serial.printf("[GII] Corners: ");
-        for (uint16_t i=0; i<8; i++) {
-            Serial.printf("%d ", corners[i]);
-        }
-        Serial.println();
-        Serial.printf("[GII] Edges: ");
-        for (uint16_t i=0; i<12; i++) {
-            Serial.printf("%d ", edges[i]);
-        }
-        Serial.println();
-    #endif
-
-    char facelets[55] = {0};
-    for (uint8_t i=0; i<54; i++) {
-        facelets[i] = GIIKER_FACES[int(i / 9)];
-    }
-    for (uint8_t c=0; c<8; c++) {
-        uint8_t j = corners[c] & 0x07;
-        uint8_t ori = corners[c] >> 3;
-        for (uint8_t n=0; n<3; n++) {
-            facelets[GIIKER_CORNER_FACELET[c][(n + ori) % 3]] = GIIKER_FACES[int(GIIKER_CORNER_FACELET[j][n] / 9)];
-        }
-    }
-    for (uint8_t e=0; e<12; e++) {
-        uint8_t j = edges[e] >> 1;
-        uint8_t ori = edges[e] & 0x01;
-        for (uint8_t n=0; n<2; n++) {
-            facelets[GIIKER_EDGE_FACELET[e][(n + ori) % 2]] = GIIKER_FACES[int(GIIKER_EDGE_FACELET[j][n] / 9)];
-        }
-    }
-
-    #if DEBUG>1
-        Serial.printf("[GII] State: %s\n", facelets);
-    #endif
-
-    display_update_cube(facelets);
-
-}
 
 bool giiker_decode(uint8_t* data, uint8_t* output, uint8_t len) {
 
@@ -147,50 +96,18 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
             cube_edges[i] = (decoded[i + 16] - 1) << 1 | cube_edges_orientation[i];
         }   
 
-        if ((memcmp(GIIKER_SOLVED_CORNERS, cube_corners, 8) == 0) &&
-            (memcmp(GIIKER_SOLVED_EDGES, cube_edges, 12) == 0)) {
-
-            #if DEBUG>0
-                Serial.println("[GII] Solved!");
-            #endif
-
-            if (_giiker_timer) {
-                _giiker_timer = false;
-                float seconds = (millis() - _giiker_start) / 1000.0;
-                #if DEBUG>0
-                    Serial.printf("[GII] Time: %7.3f seconds\n", seconds);
-                #endif
-            }
-
-        }
-
-        giiker_to_cube(cube_corners, cube_edges);
+        // Solved
+        cube_solved(cube_corners, cube_edges);
 
         // Moves
-        static uint8_t uturns = 0;
-        if (!_giiker_timer) {
-            if ((decoded[32] == 4) && (decoded[33] == 1)) {
-                uturns+=1;
-            } else {
-                uturns=0;
-            }
-            if (uturns == 4) {
-                uturns=0;
-                #if DEBUG > 0
-                    Serial.println("[GII] 4 U turns in a row! Starting timer.");
-                #endif
-                _giiker_timer = true;
-                _giiker_start = millis();
-            }
-        }
+        uint8_t dir = 0;
+        if (2 == decoded[33]) dir = 2;
+        if (3 == decoded[33]) dir = 1;
+        cube_move(GIIKER_FACE_MAP[decoded[32]-1], dir);
 
-        #if DEBUG > 1
-            Serial.print("[GII] Movement: ");
-            Serial.print(GIIKER_MOVES[decoded[32]-1]);
-            if (decoded[33] == 2) Serial.print("2");
-            if (decoded[33] == 3) Serial.print("'");
-            Serial.println();
-        #endif
+        // State
+        cube_state(cube_corners, cube_edges, GIIKER_CORNER_FACELET, GIIKER_EDGE_FACELET);
+
         
     }
 
@@ -239,9 +156,6 @@ bool giiker_start(uint16_t conn_handle) {
     #if DEBUG > 0
         Serial.println("[GII] GIIKER read characteristic found. Subscribed.");
     #endif
-
-    // Clear display
-    display_clear();
 
     return true;
     
