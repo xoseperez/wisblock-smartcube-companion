@@ -3,6 +3,8 @@
 #ifndef _TOUCH_H
 #define _TOUCH_H
 
+#define TOUCH_INT_PIN       WB_IO6
+
 enum {
     FT6336U_EVENT_CLICK = 0x01,
     FT6336U_EVENT_PRESS = 0x01,

@@ -59,13 +59,13 @@ void touch_process(void) {
             _touch_pointB.x = _touch_interface.read_touch1_x();
             _touch_pointB.y = _touch_interface.read_touch1_y();
             if (_touch_pointB.x - _touch_pointA.x > 80) {
-                touch_send_event(FT6336U_EVENT_SWIPE_UP);
-            } else if (_touch_pointA.x - _touch_pointB.x > 80) {
                 touch_send_event(FT6336U_EVENT_SWIPE_DOWN);
+            } else if (_touch_pointA.x - _touch_pointB.x > 80) {
+                touch_send_event(FT6336U_EVENT_SWIPE_UP);
             } else if (_touch_pointB.y - _touch_pointA.y > 60) {
-                touch_send_event(FT6336U_EVENT_SWIPE_RIGHT);
-            } else if (_touch_pointA.y - _touch_pointB.y > 60) {
                 touch_send_event(FT6336U_EVENT_SWIPE_LEFT);
+            } else if (_touch_pointA.y - _touch_pointB.y > 60) {
+                touch_send_event(FT6336U_EVENT_SWIPE_RIGHT);
             } else {
                 touch_send_event(FT6336U_EVENT_RELEASE);
             }

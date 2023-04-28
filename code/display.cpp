@@ -129,17 +129,28 @@ void display_clear() {
 }
 
 void display_show_intro() {
+    
     display_clear();
-    display_draw_bmp(&bmp_cube_info, 60, 20);
-    display_tft.setCursor(230, 220);
+    
+    display_draw_bmp(&bmp_cube_info, 20, 20);
+    
     display_tft.setTextColor(ST77XX_WHITE);
     display_tft.setTextSize(0);
+
+    display_tft.setCursor(230, 20);
+    display_tft.println(APP_NAME);    
+    display_tft.setCursor(276, 30);
+    display_tft.println(APP_VERSION);    
+
+
+    display_tft.setCursor(230, 220);
     display_tft.println("APPROACH CUBE");    
+
 }
 
 void display_show_timer() {
 
-    char buffer[11];
+    char buffer[12] = {0};
     uint32_t time = cube_time();
     uint16_t ms = time % 1000;
     time /= 1000;
@@ -175,7 +186,7 @@ void display_setup(void) {
     digitalWrite(BL, HIGH); // Enable the backlight, you can also adjust the backlight brightness through PWM.
 
     display_tft.init(240, 320); // Init ST7789 240x240.
-    display_tft.setRotation(1);
+    display_tft.setRotation(3);
 
     #if DEBUG > 0
         Serial.printf("[TFT] Initialized\n");
