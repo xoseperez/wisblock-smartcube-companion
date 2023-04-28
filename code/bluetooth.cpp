@@ -13,7 +13,6 @@ unsigned long mac_time[MACS_MAX] = {0};
 unsigned short mac_count = 0;
 
 uint16_t _bluetooth_handle = 0;
-bool _bluetooth_connected = false;
 unsigned char _bluetooth_local_addr[6]; // MAC of the current device
 char _bluetooth_peer_name[32]; // Name of the cube we are connected to 
 unsigned char _bluetooth_peer_addr[6]; // MAC of the cube we are connected to
@@ -35,7 +34,7 @@ char * bluetooth_peer_name() {
 }
 
 bool bluetooth_connected() {
-    return _bluetooth_connected;
+    return Bluefruit.Central.connected(_bluetooth_handle);
 }
 
 // ----------------------------------------------------------------------------
@@ -105,6 +104,8 @@ void bluetooth_scan_callback(ble_gap_evt_adv_report_t* report) {
 
 void bluetooth_connect_callback(uint16_t conn_handle) {
     
+    _bluetooth_handle = conn_handle;
+
     // Get the reference to current connection
     BLEConnection* connection = Bluefruit.Connection(conn_handle);
     connection->getPeerName(_bluetooth_peer_name, sizeof(_bluetooth_peer_name));
@@ -124,18 +125,18 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
         );
     #endif
 
-    if (ganv2_start(conn_handle)) {
-        _bluetooth_handle = conn_handle;
-        _bluetooth_connected = true;
-    } else if (giiker_start(conn_handle)) {
-        _bluetooth_handle = conn_handle;
-        _bluetooth_connected = true;
+    // Walk through cubes to identofy the connection
+    bool ok = false;
+    ok = ok || ganv2_start(conn_handle);
+    ok = ok || giiker_start(conn_handle);
+
+    // Process
+    if (ok) {
+        bluetooth_scan(false);
+        display_clear();
     } else {
         connection->disconnect();
-        bluetooth_scan(true);
     }
-
-    if (_bluetooth_connected)  display_clear();
 
 }
 
@@ -149,9 +150,8 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
         Serial.printf("[BLE] Disconnected, reason 0x%02X\n", reason);
     #endif
 
-    _bluetooth_connected = false;
-    //ganv2_stop();
-    //giiker_stop();
+    display_show_intro();
+    bluetooth_scan(true);
 
 }
 
@@ -174,7 +174,7 @@ void bluetooth_scan(bool scan) {
         Bluefruit.Scanner.restartOnDisconnect(true);
         Bluefruit.Scanner.filterRssi(BLE_RSSI_FILTER);
         Bluefruit.Scanner.setInterval(160, 80);       // in units of 0.625 ms
-        Bluefruit.Scanner.useActiveScan(false);        // Request scan response data
+        Bluefruit.Scanner.useActiveScan(true);        // Request scan response data
         Bluefruit.Scanner.start(0);                   // 0 = Don't stop scanning after n seconds
 
         #if DEBUG > 0
@@ -194,9 +194,10 @@ void bluetooth_scan(bool scan) {
 }
 
 void bluetooth_disconnect() {
-    if (!_bluetooth_connected) return;
-    BLEConnection* conn = Bluefruit.Connection(_bluetooth_handle);
-    conn->disconnect();
+    if (Bluefruit.Central.connected(_bluetooth_handle)) {
+        BLEConnection* conn = Bluefruit.Connection(_bluetooth_handle);
+        conn->disconnect();
+    }
 }
 
 void bluetooth_setup() {
@@ -223,14 +224,17 @@ void bluetooth_setup() {
     #endif
 
     // Set the BLE device name
-    Bluefruit.setName("RAKcube");
+    Bluefruit.setName(APP_NAME);
 
     // Callbacks for Central
     Bluefruit.Central.setConnectCallback(bluetooth_connect_callback);
     Bluefruit.Central.setDisconnectCallback(bluetooth_disconnect_callback);
 
-    /* Set the LED interval for blinky pattern on BLUE LED */
+    // Set the LED interval for blinky pattern on BLUE LED
     Bluefruit.setConnLedInterval(250);
+
+    ganv2_init();
+    giiker_init();
 
 }
 

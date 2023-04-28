@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "display.h"
+#include "cube.h"
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
@@ -15,6 +16,10 @@
 #define DC            WB_IO4
 
 Adafruit_ST7789 display_tft = Adafruit_ST7789(CS, DC, RST);
+
+// ----------------------------------------------------------------------------
+// Private
+// ----------------------------------------------------------------------------
 
 static void display_draw_bmp(const GUI_BITMAP *bmp , uint8_t x, uint8_t y) {
     
@@ -115,37 +120,48 @@ void display_update_cube(char * cubelets) {
 
 }
 
+// ----------------------------------------------------------------------------
+// Private
+// ----------------------------------------------------------------------------
+
 void display_clear() {
     display_tft.fillScreen(ST77XX_BLACK);
 }
 
-void display_show_cube() {
-    display_draw_bmp(&bmp_cube_info, 60, 20);
-}
-
 void display_show_intro() {
+    display_clear();
     display_draw_bmp(&bmp_cube_info, 60, 20);
     display_tft.setCursor(230, 220);
     display_tft.setTextColor(ST77XX_WHITE);
     display_tft.setTextSize(0);
-    display_tft.println("CONNECTING...");    
+    display_tft.println("APPROACH CUBE");    
 }
 
-void display_timer(uint8_t min, uint8_t sec, uint16_t ms) {
+void display_show_timer() {
 
-    char buffer[10];
+    char buffer[11];
+    uint32_t time = cube_time();
+    uint16_t ms = time % 1000;
+    time /= 1000;
+    uint8_t sec = time % 60;
+    time /= 60;
+    uint8_t min = time;
     sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
 
     display_tft.setCursor(175, 180);
-    display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    if (cube_status() == 2) {
+        display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    } else {
+        display_tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    }
     display_tft.setTextSize(2);
     display_tft.println(buffer);    
 
 }
 
-void display_ready() {
+void display_show_ready() {
     display_tft.setCursor(175, 180);
-    display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    display_tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
     display_tft.setTextSize(2);
     display_tft.println("READY...  ");    
 }
@@ -170,3 +186,15 @@ void display_setup(void) {
 
 }
 
+void display_loop() {
+    
+    if (cube_status() == 2) {
+
+        static unsigned long last = 0;
+        if (millis() - last > 10) {
+            last = millis();
+            display_show_timer();
+        }
+
+    }
+}

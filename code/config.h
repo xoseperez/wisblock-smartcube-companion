@@ -21,10 +21,14 @@
 #define BLE_TX_POWER        -16
 #define BLE_NAME            "RAKcube"
 #define BLE_RSSI_FILTER     -50
-#define BLE_TIMEOUT         5000
+#define BLE_TIMEOUT         1000
 #define BLE_CHECK_INTE
 
 // ----------------------------------------------------------------------------
+// Touch
+// ----------------------------------------------------------------------------
+
+#define TOUCH_INT_PIN       WB_IO6
 
 #endif // _CONFIG_H
 

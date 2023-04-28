@@ -5,29 +5,22 @@
 #include "display.h"
 
 uint32_t _cube_start = 0;
+uint32_t _cube_time = 0;
 uint8_t _cube_status = 0; // 0 -> idle, 1 -> ready, 2-> counting
 
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
 
-uint8_t cube_status() {
+unsigned char cube_status() {
     return _cube_status;
 }
 
-float cube_time() {
-    return millis() - _cube_start;
-}
-
-void cube_timer(uint32_t time) {
-
-    uint16_t ms = time % 1000;
-    time /= 1000;
-    uint8_t sec = time % 60;
-    time /= 60;
-    uint8_t min = time;
-    display_timer(min, sec, ms);
-
+unsigned long cube_time() {
+    if (_cube_status == 2) {
+        return millis() - _cube_start;
+    }
+    return _cube_time;
 }
 
 bool cube_solved(uint8_t * corners, uint8_t * edges) {
@@ -37,11 +30,11 @@ bool cube_solved(uint8_t * corners, uint8_t * edges) {
         (memcmp(CUBE_SOLVED_EDGES, edges, 12) == 0));
 
     if ((solved) && (_cube_status == 2)) {
-        uint32_t time = cube_time();
-        cube_timer(time);
+        _cube_time = cube_time();
         _cube_status = 0;
+        display_show_timer();
         #if DEBUG>0
-            Serial.printf("[CUB] Solved in %7.3f seconds\n", time / 1000.0);
+            Serial.printf("[CUB] Solved in %7.3f seconds\n", cube_time() / 1000.0);
         #endif
     }
 
@@ -70,7 +63,7 @@ void cube_move(uint8_t face, uint8_t dir) {
         if (uturns == 4) {
             uturns = 0;
             _cube_status = 1;
-            display_ready();
+            display_show_ready();
             #if DEBUG > 0
                 Serial.println("[CUB] 4 U turns in a row! Starting timer on next move.");
             #endif
@@ -127,7 +120,7 @@ void cube_state(uint8_t * corners, uint8_t * edges, const unsigned char cfacelet
 
     // Display
     display_update_cube(facelets);
-    if (2 == _cube_status) cube_timer(cube_time());
+    if (2 == _cube_status) display_show_timer();
     
 }
 

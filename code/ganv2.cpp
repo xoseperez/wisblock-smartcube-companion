@@ -189,14 +189,9 @@ void ganv2_data_send_raw(uint8_t* data, uint16_t len) {
     _ganv2_characteristic_write.write(data, len);
 }
 
-void ganv2_stop() {
-    _ganv2_characteristic_read.disableNotify();
-}
-
 bool ganv2_start(uint16_t conn_handle) {
 
      // Discover GAN v2 data service (only one supported right now)
-   _ganv2_service_data.begin();
     if ( !_ganv2_service_data.discover(conn_handle) ) {
         #if DEBUG > 0
             Serial.println("[GAN] GAN v2 data service not found. Disconnecting.");
@@ -208,7 +203,6 @@ bool ganv2_start(uint16_t conn_handle) {
     #endif
 
     // Discover GAN v2 write characteristic
-    _ganv2_characteristic_write.begin();
     if ( ! _ganv2_characteristic_write.discover() ) {
         #if DEBUG > 0
             Serial.println("[GAN] GAN v2 write characteristic not found. Disconnecting.");
@@ -220,16 +214,12 @@ bool ganv2_start(uint16_t conn_handle) {
     #endif
 
     // Discover GAN v2 read characteristic
-    _ganv2_characteristic_read.begin();
     if ( ! _ganv2_characteristic_read.discover() ) {
         #if DEBUG > 0
             Serial.println("[GAN] GAN v2 read characteristic not found. Disconnecting.");
         #endif
         return false;
     }
-    _ganv2_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
-        ganv2_data_callback(data, len);
-    });
     _ganv2_characteristic_read.enableNotify();
     #if DEBUG > 0
         Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
@@ -245,4 +235,18 @@ bool ganv2_start(uint16_t conn_handle) {
     
     return true;
     
+}
+
+void ganv2_init() {
+
+    // Init objects
+    _ganv2_service_data.begin();
+    _ganv2_characteristic_write.begin();
+    _ganv2_characteristic_read.begin();
+  
+    // Notifications
+    _ganv2_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
+        ganv2_data_callback(data, len);
+    });
+
 }

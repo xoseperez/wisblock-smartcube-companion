@@ -2,6 +2,26 @@
 #include "bluetooth.h"
 #include "utils.h"
 #include "display.h"
+#include "touch.h"
+
+enum {
+    STATE_IDLE = 0x00,
+    STATE_CONNECTED,
+    STATE_SCRAMBLE,
+    STATE_READY,
+    STATE_TIMER
+};
+
+void state_machine() {
+
+}
+
+void touch_callback(unsigned char event) {
+    if (event == FT6336U_EVENT_SWIPE_DOWN) {
+        Serial.println("[MAIN] Disconnnect request");
+        bluetooth_disconnect();
+    }
+}
 
 void setup() {
     
@@ -17,11 +37,23 @@ void setup() {
     bluetooth_scan(true);
     display_setup();
 
+    while (!touch_setup(TOUCH_INT_PIN)) {
+	    Serial.println("[MAIN] Touch interface is not connected");
+		delay(1000);
+    }
+
+    // Callback to be called upn event
+    touch_set_callback(touch_callback);
+
 }
 
 void loop() {
 
     bluetooth_loop();
+    display_loop();
+    touch_loop();
+    state_machine();
+
     wdt_feed();
     delay(50);
 

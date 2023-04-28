@@ -123,14 +123,9 @@ const uint8_t GIIKER_UUID_CHARACTERISTIC_READ[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80
 BLEClientService _giiker_service_data(GIIKER_UUID_SERVICE_DATA);
 BLEClientCharacteristic _giiker_characteristic_read(GIIKER_UUID_CHARACTERISTIC_READ);
 
-void giiker_stop() {
-    _giiker_characteristic_read.disableNotify();
-}
-
 bool giiker_start(uint16_t conn_handle) {
 
-     // Discover GAN v2 data service (only one supported right now)
-   _giiker_service_data.begin();
+     // Discover Giiker data service (only one supported right now)
     if ( !_giiker_service_data.discover(conn_handle) ) {
         #if DEBUG > 0
             Serial.println("[GII] GIIKER data service not found. Disconnecting.");
@@ -141,17 +136,13 @@ bool giiker_start(uint16_t conn_handle) {
         Serial.println("[GII] GIIKER data service found.");
     #endif
 
-    // Discover GAN v2 read characteristic
-    _giiker_characteristic_read.begin();
+    // Discover Giiker read characteristic
     if ( ! _giiker_characteristic_read.discover() ) {
         #if DEBUG > 0
             Serial.println("[GII] GIIKER read characteristic not found. Disconnecting.");
         #endif
         return false;
     }
-    _giiker_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
-        giiker_data_callback(data, len);
-    });
     _giiker_characteristic_read.enableNotify();
     #if DEBUG > 0
         Serial.println("[GII] GIIKER read characteristic found. Subscribed.");
@@ -159,4 +150,17 @@ bool giiker_start(uint16_t conn_handle) {
 
     return true;
     
+}
+
+void giiker_init() {
+
+    // Init objects
+    _giiker_service_data.begin();
+    _giiker_characteristic_read.begin();
+    
+    // Notifications
+    _giiker_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
+        giiker_data_callback(data, len);
+    });
+
 }
