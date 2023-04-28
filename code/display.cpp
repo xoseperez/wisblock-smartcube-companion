@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "display.h"
+#include "bluetooth.h"
 #include "cube.h"
 
 #include <Adafruit_GFX.h>
@@ -15,7 +16,15 @@
 #define RST           WB_IO5
 #define DC            WB_IO4
 
+#define DISPLAY_ALIGN_LEFT    0
+#define DISPLAY_ALIGN_CENTER  1
+#define DISPLAY_ALIGN_RIGHT   2
+#define DISPLAY_ALIGN_TOP     0
+#define DISPLAY_ALIGN_MIDDLE  4
+#define DISPLAY_ALIGN_BOTTOM  8
+
 Adafruit_ST7789 display_tft = Adafruit_ST7789(CS, DC, RST);
+static bool _display_block_flag = false;
 
 // ----------------------------------------------------------------------------
 // Private
@@ -44,7 +53,10 @@ static void display_draw_bmp(const GUI_BITMAP *bmp , uint8_t x, uint8_t y) {
 
 }
 
-void display_update_cube(char * cubelets) {
+void display_update_cube() {
+
+    // Get cubelets
+    unsigned char * cubelets = cube_cubelets();
 
     // URFDLB
     uint16_t colors[6] = { 
@@ -75,6 +87,10 @@ void display_update_cube(char * cubelets) {
     uint8_t offset_y = (240 - 9 * block) / 2;
     uint8_t x = 0, y = 0;
     uint8_t index = 0;
+
+    // Semaphore
+    while (_display_block_flag) delay(1);
+    _display_block_flag = true;
 
     // U
     x = offset_x + 3 * block;
@@ -118,6 +134,27 @@ void display_update_cube(char * cubelets) {
       display_tft.fillRect(x + (2-j) * block, y + (2-i) * block, size, size, colors[cc[index++]]);
     }
 
+    _display_block_flag = false;
+
+}
+
+void display_text(char * text, uint16_t x, uint16_t y, uint8_t align) {
+
+    // Get text dimensions
+    int16_t a, b;
+    uint16_t w, h;
+    display_tft.getTextBounds(text, 0, 0, &a, &b, &w, &h);
+
+    // Calculate position
+    if (align & DISPLAY_ALIGN_CENTER) x = x - (w / 2);
+    if (align & DISPLAY_ALIGN_RIGHT) x = x - w;
+    if (align & DISPLAY_ALIGN_MIDDLE) y = y - (h / 2);
+    if (align & DISPLAY_ALIGN_BOTTOM) y = y - h;
+
+    // Display
+    display_tft.setCursor(x, y);
+    display_tft.println(text);    
+
 }
 
 // ----------------------------------------------------------------------------
@@ -131,26 +168,19 @@ void display_clear() {
 void display_show_intro() {
     
     display_clear();
-    
     display_draw_bmp(&bmp_cube_info, 20, 20);
-    
-    display_tft.setTextColor(ST77XX_WHITE);
     display_tft.setTextSize(0);
-
-    display_tft.setCursor(230, 20);
-    display_tft.println(APP_NAME);    
-    display_tft.setCursor(276, 30);
-    display_tft.println(APP_VERSION);    
-
-
-    display_tft.setCursor(230, 220);
-    display_tft.println("APPROACH CUBE");    
+    display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    display_text((char *) APP_NAME, 310, 210, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
+    display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
+    display_tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    display_text((char *) "Connect cube...", 310, 230, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
 
 }
 
 void display_show_timer() {
 
-    char buffer[12] = {0};
+    char buffer[15] = {0};
     uint32_t time = cube_time();
     uint16_t ms = time % 1000;
     time /= 1000;
@@ -159,22 +189,20 @@ void display_show_timer() {
     uint8_t min = time;
     sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
 
-    display_tft.setCursor(175, 180);
-    if (cube_status() == 2) {
+    if (cube_status() == 3) {
         display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
     } else {
         display_tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     }
     display_tft.setTextSize(2);
-    display_tft.println(buffer);    
+    display_text(buffer, 175, 180, 0);
 
 }
 
 void display_show_ready() {
-    display_tft.setCursor(175, 180);
-    display_tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
+    display_tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     display_tft.setTextSize(2);
-    display_tft.println("READY...  ");    
+    display_text((char *) "READY...  ", 175, 180, 0);
 }
 
 void display_setup(void) {
@@ -199,13 +227,18 @@ void display_setup(void) {
 
 void display_loop() {
     
-    if (cube_status() == 2) {
+    static unsigned long last = 0;
+    if (millis() - last < 10) return;
+    last = millis();
 
-        static unsigned long last = 0;
-        if (millis() - last > 10) {
-            last = millis();
-            display_show_timer();
-        }
-
+    if (cube_updated()) {
+      display_update_cube();
     }
+
+    if (cube_status() == 2) {
+        display_show_ready();
+    } else if ((cube_status() == 1) || (cube_status() == 3)) {
+        display_show_timer();
+    }
+
 }

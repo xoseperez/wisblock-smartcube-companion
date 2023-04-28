@@ -4,6 +4,7 @@
 #include "config.h"
 #include "bluetooth.h"
 #include "display.h"
+#include "cube.h"
 #include "ganv2.h"
 #include "giiker.h"
 
@@ -150,6 +151,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
         Serial.printf("[BLE] Disconnected, reason 0x%02X\n", reason);
     #endif
 
+    cube_reset();
     display_show_intro();
     bluetooth_scan(true);
 
