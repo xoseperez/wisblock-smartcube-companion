@@ -2,6 +2,9 @@
 
 #include "config.h"
 #include "bluetooth.h"
+#include "display.h"
+#include "touch.h"
+#include "cube.h"
 #include "utils.h"
 
 char _utils_device_name[32] = {0};
@@ -20,13 +23,39 @@ void wdt_feed() {
     NRF_WDT->RR[0] = WDT_RR_RR_Reload;
 }
 
+unsigned char utils_setup() {
+    pinMode(BAT_MEASUREMENT_GPIO, INPUT);
+    analogReference(AR_INTERNAL_3_0);
+    analogReadResolution(12);
+}
+
+unsigned char utils_get_battery() {
+    float raw = analogRead(BAT_MEASUREMENT_GPIO);
+    unsigned long mv = raw * REAL_VBAT_MV_PER_LSB;
+    #if DEBUG > 2
+        Serial.printf("[MAIN] Battery reading: %d\n", mv);
+    #endif
+    mv = constrain(mv, BATT_MIN_MV, BATT_MAX_MV);
+    return map(mv, BATT_MIN_MV, BATT_MAX_MV, 0, 100);
+}
+
 void sleep() {
 
     _utils_sleeping = true;
 
+    display_clear();
+    display_off();
+    bluetooth_scan(false);
+
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
 
-    #ifdef DEBUG
+    attachInterrupt(
+        TOUCH_INT_PIN, 
+        []() { if (_utils_sleeping) _utils_sleeping = false; },
+        RISING
+    );
+
+    #if DEBUG > 0
         Serial.printf("[MAIN] Goind to sleep\n");
         delay(100);
     #endif
@@ -42,22 +71,39 @@ void sleep() {
     NRF_SPI1->ENABLE = 0;  //disable SPI
     NRF_SPI2->ENABLE = 0;  //disable SPI
 
-    while (_utils_sleeping) {
-        __WFE();
-        __WFI();
+    
+    while(true) {
+    
+        while (_utils_sleeping) {
+            __WFE();
+            __WFI();
+        }
+
+        // get out of sleeping if pressed for > 1s
+        delay(1000);
+        if (digitalRead(TOUCH_INT_PIN) == LOW) break;
+        
     }
 
-    NRF_UARTE0->ENABLE = UARTE_ENABLE_ENABLE_Enabled; //disable UART
+    detachInterrupt(TOUCH_INT_PIN);
+
+    NRF_UARTE0->ENABLE = UARTE_ENABLE_ENABLE_Enabled;
     NRF_SPIM2->ENABLE = (SPI_ENABLE_ENABLE_Enabled << SPI_ENABLE_ENABLE_Pos);
-    ; //disable SPI
     NRF_TWIM0->ENABLE = (TWIM_ENABLE_ENABLE_Enabled << TWIM_ENABLE_ENABLE_Pos);
-    ; //disable TWI Master
 
     delay(100);
 
-    #ifdef DEBUG
+    cube_reset();
+    bluetooth_scan(true);
+    display_on();
+    display_show_intro();
+    touch_setup(TOUCH_INT_PIN);
+
+    #if DEBUG > 0
         Serial.printf("[MAIN] Waked up\n");
     #endif
+
+    _utils_sleeping = false;
 
 } 
 
@@ -73,30 +119,6 @@ char * utils_device_name() {
 
     return _utils_device_name;
 
-}
-
-void utils_set_peer_battery(uint8_t value) {
-    _utils_peer_battery = value;
-    #ifdef DEBUG
-        Serial.printf("[MAIN] Peer battery level: %d%%\n", value);
-    #endif
-
-}
-
-void utils_set_peer_version(char * version) {
-    strncpy(_utils_peer_version, version, sizeof(_utils_peer_version));
-    #ifdef DEBUG
-        Serial.printf("[MAIN] Peer version: %s\n", _utils_peer_version);
-    #endif
-
-}
-
-uint8_t utils_get_peer_battery() {
-    return _utils_peer_battery;
-}
-
-char * utils_get_peer_version() {
-    return _utils_peer_version;
 }
 
 uint8_t utils_get_bit(uint8_t * data, uint16_t position) {

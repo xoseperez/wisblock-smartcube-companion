@@ -4,17 +4,13 @@
 #include "display.h"
 #include "bluetooth.h"
 #include "cube.h"
+#include "utils.h"
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
 #include <SPI.h>
 
 #include "bmp_cube.h"
-
-#define CS            SS
-#define BL            WB_IO3
-#define RST           WB_IO5
-#define DC            WB_IO4
 
 #define DISPLAY_ALIGN_LEFT    0
 #define DISPLAY_ALIGN_CENTER  1
@@ -23,7 +19,7 @@
 #define DISPLAY_ALIGN_MIDDLE  4
 #define DISPLAY_ALIGN_BOTTOM  8
 
-Adafruit_ST7789 display_tft = Adafruit_ST7789(CS, DC, RST);
+Adafruit_ST7789 display_tft = Adafruit_ST7789(DISPLAY_CS_GPIO, DISPLAY_DC_GPIO, DISPLAY_RST_GPIO);
 static bool _display_block_flag = false;
 
 // ----------------------------------------------------------------------------
@@ -165,6 +161,19 @@ void display_clear() {
     display_tft.fillScreen(ST77XX_BLACK);
 }
 
+void display_battery() {
+    uint8_t battery = utils_get_battery();
+    char buffer[9] = {0};
+    sprintf(buffer, "BAT %02d%%", battery);
+    if (battery > 25) {
+        display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    } else {
+        display_tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
+    }
+    display_tft.setTextSize(1);
+    display_text(buffer, 310, 10, DISPLAY_ALIGN_RIGHT);
+}
+
 void display_show_intro() {
     
     display_clear();
@@ -175,12 +184,17 @@ void display_show_intro() {
     display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
     display_tft.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     display_text((char *) "Connect cube...", 310, 230, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
+    display_battery();
 
+}
+
+void display_hide_timer() {
+    display_tft.fillRect(175, 180, 150, 20, ST77XX_BLACK);
 }
 
 void display_show_timer() {
 
-    char buffer[15] = {0};
+    char buffer[11] = {0};
     uint32_t time = cube_time();
     uint16_t ms = time % 1000;
     time /= 1000;
@@ -205,15 +219,24 @@ void display_show_ready() {
     display_text((char *) "READY...  ", 175, 180, 0);
 }
 
+void display_off() {
+    digitalWrite(DISPLAY_BL_GPIO, LOW);
+    digitalWrite(WB_IO2, LOW);
+}
+
+void display_on() {
+    digitalWrite(WB_IO2, HIGH);
+    digitalWrite(DISPLAY_BL_GPIO, HIGH);
+}
+
 void display_setup(void) {
   
     pinMode(WB_IO2, OUTPUT);
-    digitalWrite(WB_IO2, HIGH);
-  
-    pinMode(BL, OUTPUT);
-    digitalWrite(BL, HIGH); // Enable the backlight, you can also adjust the backlight brightness through PWM.
+    pinMode(DISPLAY_BL_GPIO, OUTPUT);
 
-    display_tft.init(240, 320); // Init ST7789 240x240.
+    display_on();
+
+    display_tft.init(240, 320);
     display_tft.setRotation(3);
 
     #if DEBUG > 0
@@ -233,6 +256,7 @@ void display_loop() {
 
     if (cube_updated()) {
       display_update_cube();
+      display_battery();
     }
 
     if (cube_status() == 2) {

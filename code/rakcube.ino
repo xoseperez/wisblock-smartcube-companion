@@ -1,26 +1,30 @@
+#include <Arduino.h>
+#include <SPI.h>
+
 #include "config.h"
 #include "bluetooth.h"
 #include "utils.h"
 #include "display.h"
 #include "touch.h"
-
-enum {
-    STATE_IDLE = 0x00,
-    STATE_CONNECTED,
-    STATE_SCRAMBLE,
-    STATE_READY,
-    STATE_TIMER
-};
-
-void state_machine() {
-
-}
+#include "cube.h"
 
 void touch_callback(unsigned char event) {
+    
     if (event == FT6336U_EVENT_SWIPE_DOWN) {
-        Serial.println("[MAIN] Disconnnect request");
-        bluetooth_disconnect();
+        if (bluetooth_connected()) {
+            if (cube_status() == 3) {
+                cube_reset();
+                display_hide_timer();
+            } else {
+                Serial.println("[MAIN] Disconnnect request");
+                bluetooth_disconnect();
+            }
+        } else {
+            Serial.println("[MAIN] Shutdown request");
+            sleep();
+        }
     }
+
 }
 
 void setup() {
@@ -33,6 +37,7 @@ void setup() {
 
     wdt_set(WDT_SECONDS);
     
+    utils_setup();
     bluetooth_setup();
     bluetooth_scan(true);
     display_setup();
@@ -52,7 +57,6 @@ void loop() {
     bluetooth_loop();
     display_loop();
     touch_loop();
-    state_machine();
 
     wdt_feed();
     delay(50);
