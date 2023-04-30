@@ -9,6 +9,7 @@ uint8_t _cube_status = 0; // 0 -> idle, 1 -> solved, 2-> ready, 3-> counting
 uint8_t _cube_cubelets[55] = {0};
 bool _cube_updated = false;
 uint8_t _cube_uturns = 0;
+uint8_t _cube_battery = 0xFF;
 
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -18,10 +19,19 @@ void cube_reset() {
     _cube_status = 0;
     _cube_updated = false;
     _cube_uturns = 0;
+    _cube_battery = 0xFF;
 }
 
 unsigned char cube_status() {
     return _cube_status;
+}
+
+void cube_set_battery(uint8_t battery) {
+    _cube_battery = battery;
+}
+
+uint8_t cube_get_battery() {
+    return _cube_battery;
 }
 
 bool cube_updated() {

@@ -146,6 +146,8 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
                 Serial.printf("[GAN] Battery         : %d%%\n", data[1]);
             #endif
 
+            cube_set_battery(data[1]);
+
         }
 
     }

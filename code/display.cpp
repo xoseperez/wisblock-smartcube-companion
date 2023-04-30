@@ -162,8 +162,10 @@ void display_clear() {
 }
 
 void display_battery() {
+    
     uint8_t battery = utils_get_battery();
     char buffer[9] = {0};
+    
     sprintf(buffer, "BAT %02d%%", battery);
     if (battery > 25) {
         display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
@@ -172,6 +174,22 @@ void display_battery() {
     }
     display_tft.setTextSize(1);
     display_text(buffer, 310, 10, DISPLAY_ALIGN_RIGHT);
+
+    if (bluetooth_connected()) {
+        battery = cube_get_battery();
+        if (battery != 0xFF) {
+            sprintf(buffer, "CUBE %02d%%", battery);
+            if (battery > 25) {
+                display_tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+            } else {
+                display_tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
+            }
+            display_tft.setTextSize(1);
+            display_text(buffer, 310, 20, DISPLAY_ALIGN_RIGHT);
+        }
+    }
+
+
 }
 
 void display_show_intro() {

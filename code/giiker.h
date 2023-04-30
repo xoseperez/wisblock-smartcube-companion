@@ -1,9 +1,7 @@
 #ifndef _GIIKER_H
 #define _GIIKER_H
 
-#define GIIKER_GET_FACELETS 4
-#define GIIKER_GET_HARDWARE 5
-#define GIIKER_GET_BATTERY 9
+#define GIIKER_GET_BATTERY 0xB5
 
 void giiker_init();
 bool giiker_start(uint16_t conn_handle);

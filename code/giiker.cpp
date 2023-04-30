@@ -32,7 +32,6 @@ static const unsigned char GIIKER_EDGE_FACELET[12][2] = {
 };
 static const uint8_t GIIKER_KEY[] = { 176, 81, 104, 224, 86, 137, 237, 119, 38, 26, 193, 161, 210, 126, 150, 81, 93, 13, 236, 249, 89, 235, 88, 24, 113, 81, 214, 131, 130, 199, 2, 169, 39, 165, 171, 41 };
 
-
 // ----------------------------------------------------------------------------
 // 
 // ----------------------------------------------------------------------------
@@ -67,7 +66,7 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
     if (giiker_decode(data, decoded, len)) {
 
         #if DEBUG > 1
-            Serial.printf("[GII] Received: ");
+            Serial.printf("[GII] DATA Received: ");
             for (uint16_t i=0; i<36; i++) {
                 Serial.printf("%01X", decoded[i]);
             }
@@ -113,15 +112,64 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
 
 }
 
+void giiker_rw_callback(uint8_t* data, uint16_t len) {
+
+    #if DEBUG > 1
+        Serial.printf("[GII] READ Received: ");
+        for (uint16_t i=0; i<len; i++) {
+            Serial.printf("%02X", data[i]);
+        }
+        Serial.println();
+    #endif
+        
+    #if DEBUG > 0
+        Serial.printf("[GII] Battery : %d%%\n", data[1]);
+    #endif
+
+    cube_set_battery(data[1]);
+
+}
+
+void giiker_data_send(uint8_t* data, uint16_t len) {
+
+    #if DEBUG > 1
+        Serial.printf("[GII] Sending: ");
+        for (uint16_t i=0; i<len; i++) {
+            Serial.printf("%02X", data[i]);
+        }
+        Serial.println();
+    #endif
+    
+    giiker_data_send_raw(data, len);
+
+}
+
+void giiker_data_send(uint8_t opcode) {
+    uint8_t data[] = { opcode };
+    giiker_data_send(data, sizeof(data));
+}
+
 // ----------------------------------------------------------------------------
 // Bluetooth
 // ----------------------------------------------------------------------------
 
 const uint8_t GIIKER_UUID_SERVICE_DATA[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xDB, 0xAA, 0x00, 0x00 };
-const uint8_t GIIKER_UUID_CHARACTERISTIC_READ[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xDC, 0xAA, 0x00, 0x00 };
+const uint8_t GIIKER_UUID_CHARACTERISTIC_DATA[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xDC, 0xAA, 0x00, 0x00 };
+
+const uint8_t GIIKER_UUID_SERVICE_RW[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xAA, 0xAA, 0x00, 0x00 };
+const uint8_t GIIKER_UUID_CHARACTERISTIC_WRITE[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xAC, 0xAA, 0x00, 0x00 };
+const uint8_t GIIKER_UUID_CHARACTERISTIC_READ[] = { 0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xAB, 0xAA, 0x00, 0x00 };
 
 BLEClientService _giiker_service_data(GIIKER_UUID_SERVICE_DATA);
+BLEClientCharacteristic _giiker_characteristic_data(GIIKER_UUID_CHARACTERISTIC_DATA);
+
+BLEClientService _giiker_service_rw(GIIKER_UUID_SERVICE_RW);
+BLEClientCharacteristic _giiker_characteristic_write(GIIKER_UUID_CHARACTERISTIC_WRITE);
 BLEClientCharacteristic _giiker_characteristic_read(GIIKER_UUID_CHARACTERISTIC_READ);
+
+void giiker_data_send_raw(uint8_t* data, uint16_t len) {
+    _giiker_characteristic_write.write(data, len);
+}
 
 bool giiker_start(uint16_t conn_handle) {
 
@@ -136,17 +184,56 @@ bool giiker_start(uint16_t conn_handle) {
         Serial.println("[GII] GIIKER data service found.");
     #endif
 
+    // Discover Giiker data characteristic
+    if ( ! _giiker_characteristic_data.discover() ) {
+        #if DEBUG > 0
+            Serial.println("[GII] GIIKER data characteristic not found. Disconnecting.");
+        #endif
+        return false;
+    }
+    _giiker_characteristic_data.enableNotify();
+    #if DEBUG > 0
+        Serial.println("[GII] GIIKER data characteristic found. Subscribed.");
+    #endif
+
+    // For the battery services, even if we don't find them we go on
+
+    // Discover Giiker rw service (only one supported right now)
+    if ( !_giiker_service_rw.discover(conn_handle) ) {
+        #if DEBUG > 0
+            Serial.println("[GII] GIIKER rw service not found. Disconnecting.");
+        #endif
+        return true;
+    }
+    #if DEBUG > 0
+        Serial.println("[GII] GIIKER rw service found.");
+    #endif
+
+    // Discover Giiker write characteristic
+    if ( ! _giiker_characteristic_write.discover() ) {
+        #if DEBUG > 0
+            Serial.println("[GII] GIIKER write characteristic not found.");
+        #endif
+        return true;
+    }
+    #if DEBUG > 0
+        Serial.println("[GII] GIIKER write characteristic found.");
+    #endif
+
     // Discover Giiker read characteristic
     if ( ! _giiker_characteristic_read.discover() ) {
         #if DEBUG > 0
-            Serial.println("[GII] GIIKER read characteristic not found. Disconnecting.");
+            Serial.println("[GII] GIIKER read characteristic not found.");
         #endif
-        return false;
+        return true;
     }
     _giiker_characteristic_read.enableNotify();
     #if DEBUG > 0
         Serial.println("[GII] GIIKER read characteristic found. Subscribed.");
     #endif
+
+    // Send battery request
+    giiker_data_send(GIIKER_GET_BATTERY);
 
     return true;
     
@@ -156,11 +243,18 @@ void giiker_init() {
 
     // Init objects
     _giiker_service_data.begin();
+    _giiker_characteristic_data.begin();
+    _giiker_service_rw.begin();
     _giiker_characteristic_read.begin();
+    _giiker_characteristic_write.begin();
     
     // Notifications
-    _giiker_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
+    _giiker_characteristic_data.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
         giiker_data_callback(data, len);
+    });
+    _giiker_characteristic_read.setNotifyCallback([](BLEClientCharacteristic* chr, uint8_t* data, uint16_t len) {
+        giiker_rw_callback(data, len);
+        _giiker_characteristic_read.disableNotify();
     });
 
 }
