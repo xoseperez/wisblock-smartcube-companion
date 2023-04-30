@@ -95,14 +95,14 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
             cube_edges[i] = (decoded[i + 16] - 1) << 1 | cube_edges_orientation[i];
         }   
 
-        // Solved
-        cube_solved(cube_corners, cube_edges);
-
         // Moves
         uint8_t dir = 0;
         if (2 == decoded[33]) dir = 2;
         if (3 == decoded[33]) dir = 1;
         cube_move(GIIKER_FACE_MAP[decoded[32]-1], dir);
+
+        // Solved
+        cube_solved(cube_corners, cube_edges);
 
         // State
         cube_state(cube_corners, cube_edges, GIIKER_CORNER_FACELET, GIIKER_EDGE_FACELET);

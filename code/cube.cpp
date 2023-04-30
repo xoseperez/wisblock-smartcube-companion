@@ -2,12 +2,15 @@
 
 #include "config.h"
 #include "cube.h"
+#include "cubes/ganv2.h"
+#include "cubes/giiker.h"
 
 uint32_t _cube_start = 0;
 uint32_t _cube_time = 0;
 uint8_t _cube_status = 0; // 0 -> idle, 1 -> solved, 2-> ready, 3-> counting
 uint8_t _cube_cubelets[55] = {0};
 bool _cube_updated = false;
+uint8_t _cube_turns = 0;
 uint8_t _cube_uturns = 0;
 uint8_t _cube_battery = 0xFF;
 
@@ -16,6 +19,7 @@ static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
 
 void cube_reset() {
+    _cube_turns = 0;
     _cube_status = 0;
     _cube_updated = false;
     _cube_uturns = 0;
@@ -40,6 +44,10 @@ bool cube_updated() {
     return ret;
 }
 
+unsigned short cube_turns() {
+    return _cube_turns;
+}
+
 unsigned long cube_time() {
     if (_cube_status == 3) {
         return millis() - _cube_start;
@@ -49,6 +57,21 @@ unsigned long cube_time() {
 
 uint8_t * cube_cubelets() {
     return _cube_cubelets;
+}
+
+bool cube_find(uint8_t conn_handle) {
+
+    // Walk through cubes to identofy the connection
+    bool ok = false;
+    ok = ok || ganv2_start(conn_handle);
+    ok = ok || giiker_start(conn_handle);
+    return ok;
+
+}
+
+void cube_setup() {
+    ganv2_init();
+    giiker_init();
 }
 
 bool cube_solved(uint8_t * corners, uint8_t * edges) {
@@ -74,12 +97,14 @@ void cube_move(uint8_t face, uint8_t dir) {
     // Moves
     if (_cube_status == 2) {
         _cube_status = 3;
+        _cube_turns = 0;
         _cube_start = millis();
         #if DEBUG > 0
             Serial.println("[CUB] Starting timer.");
         #endif
     }
 
+    // Check auto start 
     if (_cube_status < 2) {
         if ((0 == face) && (0 == dir)) {
             _cube_uturns += 1;
@@ -93,6 +118,11 @@ void cube_move(uint8_t face, uint8_t dir) {
                 Serial.println("[CUB] 4 U turns in a row! Starting timer on next move.");
             #endif
         }
+    }
+
+    // Count turns
+    if (_cube_status == 3) {
+        _cube_turns++;
     }
 
     #if DEBUG > 1

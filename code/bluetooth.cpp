@@ -5,8 +5,6 @@
 #include "bluetooth.h"
 #include "display.h"
 #include "cube.h"
-#include "ganv2.h"
-#include "giiker.h"
 
 #define MACS_MAX 20
 unsigned char mac_values[MACS_MAX][6];
@@ -127,9 +125,7 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
     #endif
 
     // Walk through cubes to identofy the connection
-    bool ok = false;
-    ok = ok || ganv2_start(conn_handle);
-    ok = ok || giiker_start(conn_handle);
+    bool ok = cube_find(conn_handle);
 
     // Process
     if (ok) {
@@ -234,9 +230,6 @@ void bluetooth_setup() {
 
     // Set the LED interval for blinky pattern on BLUE LED
     Bluefruit.setConnLedInterval(250);
-
-    ganv2_init();
-    giiker_init();
 
 }
 

@@ -41,6 +41,7 @@ void setup() {
     bluetooth_setup();
     bluetooth_scan(true);
     display_setup();
+    cube_setup();
 
     while (!touch_setup(TOUCH_INT_PIN)) {
 	    Serial.println("[MAIN] Touch interface is not connected");
