@@ -5,15 +5,18 @@
 #include "cubes/ganv2.h"
 #include "cubes/giiker.h"
 
-uint32_t _cube_start = 0;
-uint32_t _cube_time = 0;
-uint8_t _cube_status = 0; // 0 -> idle, 1 -> solved, 2-> ready, 3-> counting
+// state
 uint8_t _cube_cubelets[55] = {0};
 bool _cube_updated = false;
-uint8_t _cube_turns = 0;
-uint8_t _cube_uturns = 0;
 uint8_t _cube_battery = 0xFF;
 bool _cube_connected = false;
+
+// metrics
+bool _cube_running_metrics = false;
+uint32_t _cube_last_move_millis = 0;
+uint32_t _cube_start = 0;
+uint32_t _cube_time = 0;
+uint8_t _cube_turns = 0;
 
 void (*_cube_callback)(uint8_t event);
 
@@ -31,13 +34,7 @@ void cube_set_callback(void (*callback)(uint8_t event)) {
 
 void cube_reset() {
     _cube_turns = 0;
-    _cube_status = 0;
     _cube_updated = false;
-    _cube_uturns = 0;
-}
-
-unsigned char cube_status() {
-    return _cube_status;
 }
 
 uint8_t cube_get_battery() {
@@ -48,17 +45,6 @@ bool cube_updated() {
     bool ret = _cube_updated;
     _cube_updated = false;
     return ret;
-}
-
-unsigned short cube_turns() {
-    return _cube_turns;
-}
-
-unsigned long cube_time() {
-    if (_cube_status == 3) {
-        return millis() - _cube_start;
-    }
-    return _cube_time;
 }
 
 uint8_t * cube_cubelets() {
@@ -78,7 +64,7 @@ bool cube_bind(uint8_t conn_handle) {
 }
 
 void cube_unbind() {
-    cube_reset();
+    //cube_reset();
     _cube_battery = 0xFF;
     if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_DISCONNECTED);
     _cube_connected = false;
@@ -87,6 +73,32 @@ void cube_unbind() {
 void cube_setup() {
     ganv2_init();
     giiker_init();
+}
+
+// ----------------------------------------------------------------------------
+// Metrics
+// ----------------------------------------------------------------------------
+
+void cube_metrics_start() {
+    _cube_start = _cube_last_move_millis;
+    _cube_turns = 0;
+    _cube_running_metrics = true;
+}
+
+void cube_metrics_end() {
+    _cube_time = _cube_last_move_millis - _cube_start;
+    _cube_running_metrics = false;
+}
+
+unsigned long cube_time() {
+    if (_cube_running_metrics) {
+        return millis() - _cube_start;
+    }
+    return _cube_time;
+}
+
+unsigned short cube_turns() {
+    return _cube_turns;
 }
 
 // ----------------------------------------------------------------------------
@@ -104,13 +116,8 @@ bool cube_solved(uint8_t * corners, uint8_t * edges) {
         ((memcmp(CUBE_SOLVED_CORNERS, corners, 8) == 0) &&
         (memcmp(CUBE_SOLVED_EDGES, edges, 12) == 0));
 
-    if ((solved) && (_cube_status == 3)) {
-        _cube_time = cube_time();
-        _cube_status = 1;
+    if (solved) {
         if (_cube_callback) _cube_callback(CUBE_EVENT_SOLVED);
-        #if DEBUG>0
-            Serial.printf("[CUB] Solved in %7.3f seconds\n", cube_time() / 1000.0);
-        #endif
     }
 
     return solved;
@@ -119,38 +126,24 @@ bool cube_solved(uint8_t * corners, uint8_t * edges) {
 
 void cube_move(uint8_t face, uint8_t dir) {
 
+    _cube_last_move_millis = millis();
+
     if (_cube_callback) _cube_callback(CUBE_EVENT_MOVE);
     
-    // Moves
-    if (_cube_status == 2) {
-        _cube_status = 3;
-        _cube_turns = 0;
-        _cube_start = millis();
-        #if DEBUG > 0
-            Serial.println("[CUB] Starting timer.");
-        #endif
-    }
+    // Metrics
+    if (_cube_running_metrics) _cube_turns++;
 
-    // Check auto start 
-    if (_cube_status < 2) {
-        if ((0 == face) && (0 == dir)) {
-            _cube_uturns += 1;
-        } else {
-            _cube_uturns = 0;
-        }
-        if (_cube_uturns == 4) {
-            _cube_uturns = 0;
-            _cube_status = 2;
-            if (_cube_callback) _cube_callback(CUBE_EVENT_4UTURNS);
-            #if DEBUG > 0
-                Serial.println("[CUB] 4 U turns in a row! Starting timer on next move.");
-            #endif
-        }
+    // Check U turns
+    static unsigned long uturns = 0;
+    if ((0 == face) && (0 == dir)) {
+        uturns += 1;
+    } else {
+        uturns = 0;
     }
-
-    // Count turns
-    if (_cube_status == 3) {
-        _cube_turns++;
+    if (uturns == 4) {
+        uturns = 0;
+        uturns = 2;
+        if (_cube_callback) _cube_callback(CUBE_EVENT_4UTURNS);
     }
 
     #if DEBUG > 1

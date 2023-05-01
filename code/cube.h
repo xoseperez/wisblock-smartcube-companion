@@ -17,13 +17,15 @@ void cube_set_battery(uint8_t battery);
 uint8_t cube_get_battery();
 void cube_set_callback(void (*callback)(uint8_t event));
 
+void cube_setup();
 bool cube_bind(uint8_t conn_handle);
 void cube_unbind();
-void cube_setup();
-void cube_reset();
-unsigned char cube_status();
+
+void cube_metrics_start();
+void cube_metrics_end();
 unsigned short cube_turns();
 unsigned long cube_time();
+
 unsigned char * cube_cubelets();
 bool cube_updated();
 

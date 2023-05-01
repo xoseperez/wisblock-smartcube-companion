@@ -67,12 +67,18 @@ void cube_callback(unsigned char event) {
             break;
 
         case CUBE_EVENT_MOVE:
-            if (_state == STATE_INSPECT) _state = STATE_TIMER;
+            if (_state == STATE_INSPECT) {
+                cube_metrics_start();
+                _state = STATE_TIMER;
+            }
             if (_state == STATE_RESULT) _state = STATE_CONNECTED;
             break;
 
         case CUBE_EVENT_SOLVED:
-            if (_state == STATE_TIMER) _state = STATE_RESULT;
+            if (_state == STATE_TIMER) {
+                cube_metrics_end();
+                _state = STATE_RESULT;
+            }
             break;
 
     }
@@ -113,9 +119,6 @@ void state_machine() {
             break;
 
         case STATE_CONNECTED:
-            if (changed_state) {
-                cube_reset();
-            }
             if (cube_updated()) {
                 display_update_cube();
                 display_battery();

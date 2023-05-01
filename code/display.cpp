@@ -192,7 +192,7 @@ void display_show_timer() {
 
     unsigned long time = cube_time();
     unsigned short turns = cube_turns();
-    unsigned char status = cube_status();
+    float tps = turns / ( time / 1000.0 );
     char buffer[30] = {0};
 
     unsigned long tmp = time;
@@ -204,17 +204,10 @@ void display_show_timer() {
     sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
 
 
-    _display_canvas.setTextColor((3 == status) ? ST77XX_WHITE : ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
     display_text(buffer, 226, 180, DISPLAY_ALIGN_CENTER);
-
-    if (3 == status) {
-        sprintf(buffer, "TURNS %d", turns);
-    } else {
-        float tps = turns / ( time / 1000.0 );
-        sprintf(buffer, "TURNS %d | TPS %2.1f", turns, tps);
-    }
-    
+    sprintf(buffer, "TURNS %d | TPS %2.1f", turns, tps);
     _display_canvas.setTextSize(1);
     display_text(buffer, 226, 200, DISPLAY_ALIGN_CENTER);
 
