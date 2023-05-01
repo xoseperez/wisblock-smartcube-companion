@@ -46,7 +46,7 @@ static void display_draw_bmp(const GUI_BITMAP *bmp, uint8_t x, uint8_t y) {
     }
 }
 
-void display_update_cube() {
+void display_update_cube(unsigned char size) {
 
     // Get cubelets
     unsigned char * cubelets = cube_cubelets();
@@ -62,9 +62,8 @@ void display_update_cube() {
       if (cubelets[i] == 'B') cc[i] = 5;
     }
 
-    // 240x320
-    uint8_t gap = 2;
-    uint8_t size = 20;
+    uint8_t gap = size / 10;
+    if (gap == 0) gap = 1;
     uint8_t block = (size + gap);
     uint8_t offset_x = (DISPLAY_WIDTH - 12 * block) / 2;
     uint8_t offset_y = (DISPLAY_HEIGHT - 9 * block) / 2;

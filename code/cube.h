@@ -2,9 +2,11 @@
 #define _CUBE_H
 
 enum {
+    CUBE_EVENT_CONNECTED,
     CUBE_EVENT_MOVE,
     CUBE_EVENT_4UTURNS,
-    CUBE_EVENT_SOLVED
+    CUBE_EVENT_SOLVED,
+    CUBE_EVENT_DISCONNECTED
 };
 
 bool cube_solved(uint8_t * corners, uint8_t * edges);
@@ -15,7 +17,8 @@ void cube_set_battery(uint8_t battery);
 uint8_t cube_get_battery();
 void cube_set_callback(void (*callback)(uint8_t event));
 
-bool cube_find(uint8_t conn_handle);
+bool cube_bind(uint8_t conn_handle);
+void cube_unbind();
 void cube_setup();
 void cube_reset();
 unsigned char cube_status();

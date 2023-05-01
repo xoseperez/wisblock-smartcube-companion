@@ -38,7 +38,7 @@ void touch_process(void) {
     if (newstate == _touch_state) {
         if (_touch_state != 0) {
             if ((millis() - _touch_event_start) > 1000) {
-                touch_send_event(FT6336U_EVENT_HOLD);
+                touch_send_event(TOUCH_EVENT_HOLD);
             }
         }
     
@@ -47,7 +47,7 @@ void touch_process(void) {
 
         // click
         if ((_touch_state == 0) && (newstate == 1)) {
-            touch_send_event(FT6336U_EVENT_CLICK);
+            touch_send_event(TOUCH_EVENT_CLICK);
             _touch_event_start = millis();
             _touch_pointA.x = _touch_interface.read_touch1_x();
             _touch_pointA.y = _touch_interface.read_touch1_y();
@@ -55,25 +55,25 @@ void touch_process(void) {
 
         // release
         if ((_touch_state == 1) && (newstate == 0)) {
-            touch_send_event(FT6336U_EVENT_RELEASE);
+            touch_send_event(TOUCH_EVENT_RELEASE);
             _touch_pointB.x = _touch_interface.read_touch1_x();
             _touch_pointB.y = _touch_interface.read_touch1_y();
             if (_touch_pointB.x - _touch_pointA.x > 80) {
-                touch_send_event(FT6336U_EVENT_SWIPE_DOWN);
+                touch_send_event(TOUCH_EVENT_SWIPE_DOWN);
             } else if (_touch_pointA.x - _touch_pointB.x > 80) {
-                touch_send_event(FT6336U_EVENT_SWIPE_UP);
+                touch_send_event(TOUCH_EVENT_SWIPE_UP);
             } else if (_touch_pointB.y - _touch_pointA.y > 60) {
-                touch_send_event(FT6336U_EVENT_SWIPE_LEFT);
+                touch_send_event(TOUCH_EVENT_SWIPE_LEFT);
             } else if (_touch_pointA.y - _touch_pointB.y > 60) {
-                touch_send_event(FT6336U_EVENT_SWIPE_RIGHT);
+                touch_send_event(TOUCH_EVENT_SWIPE_RIGHT);
             } else {
-                touch_send_event(FT6336U_EVENT_RELEASE);
+                touch_send_event(TOUCH_EVENT_RELEASE);
             }
         }
 
         // click two fingers
         if ((_touch_state == 0) && (newstate == 2)) {
-            touch_send_event(FT6336U_EVENT_CLICK_TWO_FINGERS);
+            touch_send_event(TOUCH_EVENT_CLICK_TWO_FINGERS);
             _touch_event_start = millis();
             _touch_pointA.x = _touch_interface.read_touch1_x();
             _touch_pointA.y = _touch_interface.read_touch1_y();
@@ -83,7 +83,7 @@ void touch_process(void) {
 
         // release two fingers
         if ((_touch_state == 2) && (newstate == 0)) {
-            touch_send_event(FT6336U_EVENT_RELEASE);
+            touch_send_event(TOUCH_EVENT_RELEASE);
         }
 
         _touch_state = newstate;

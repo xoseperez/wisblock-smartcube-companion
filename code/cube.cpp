@@ -13,12 +13,17 @@ bool _cube_updated = false;
 uint8_t _cube_turns = 0;
 uint8_t _cube_uturns = 0;
 uint8_t _cube_battery = 0xFF;
+bool _cube_connected = false;
 
 void (*_cube_callback)(uint8_t event);
 
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+
+// ----------------------------------------------------------------------------
+// Public
+// ----------------------------------------------------------------------------
 
 void cube_set_callback(void (*callback)(uint8_t event)) {
     _cube_callback = callback;
@@ -29,15 +34,10 @@ void cube_reset() {
     _cube_status = 0;
     _cube_updated = false;
     _cube_uturns = 0;
-    _cube_battery = 0xFF;
 }
 
 unsigned char cube_status() {
     return _cube_status;
-}
-
-void cube_set_battery(uint8_t battery) {
-    _cube_battery = battery;
 }
 
 uint8_t cube_get_battery() {
@@ -65,19 +65,37 @@ uint8_t * cube_cubelets() {
     return _cube_cubelets;
 }
 
-bool cube_find(uint8_t conn_handle) {
+bool cube_bind(uint8_t conn_handle) {
 
     // Walk through cubes to identofy the connection
-    bool ok = false;
-    ok = ok || ganv2_start(conn_handle);
-    ok = ok || giiker_start(conn_handle);
-    return ok;
+    _cube_connected = false;
+    _cube_connected = _cube_connected || ganv2_start(conn_handle);
+    _cube_connected = _cube_connected || giiker_start(conn_handle);
 
+    if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_CONNECTED);
+    return _cube_connected;
+
+}
+
+void cube_unbind() {
+    cube_reset();
+    _cube_battery = 0xFF;
+    if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_DISCONNECTED);
+    _cube_connected = false;
 }
 
 void cube_setup() {
     ganv2_init();
     giiker_init();
+}
+
+// ----------------------------------------------------------------------------
+// Protected
+// Methods called only by cubes
+// ----------------------------------------------------------------------------
+
+void cube_set_battery(uint8_t battery) {
+    _cube_battery = battery;
 }
 
 bool cube_solved(uint8_t * corners, uint8_t * edges) {

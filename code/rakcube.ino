@@ -14,30 +14,37 @@ enum {
     STATE_CONNECTED,
     STATE_INSPECT,
     STATE_TIMER,
-    STATE_RESULT
+    STATE_RESULT,
+    STATE_DISCONNECT
 };
 
 unsigned char _state_old = STATE_SLEEPING;
-unsigned char _state = STATE_SLEEPING;
+unsigned char _state = STATE_INTRO;
 
 void touch_callback(unsigned char event) {
     
-    if (event == FT6336U_EVENT_SWIPE_DOWN) {
+    if (event == TOUCH_EVENT_SWIPE_DOWN) {
 
-        if (_state == STATE_INTRO) {
-            Serial.println("[MAIN] Shutdown request");
-            _state = STATE_SLEEPING; // so it wakes up in the intro page
-            sleep();
+        switch (_state) {
 
-        } else if (_state == STATE_CONNECTED) {
-            Serial.println("[MAIN] Disconnnect request");
-            bluetooth_disconnect();
-        
-        } else if (_state == STATE_TIMER) {
-            Serial.println("[MAIN] Cancel timer request");
-            cube_reset();
-            _state = STATE_CONNECTED;
-        }
+            case STATE_INTRO:
+                _state = STATE_SLEEPING;
+                break;
+
+            case STATE_CONNECTED:
+                _state = STATE_DISCONNECT;
+                break;
+
+            case STATE_INSPECT:
+            case STATE_TIMER:
+            case STATE_RESULT:
+                _state = STATE_CONNECTED;
+                break;
+
+            default:
+                break;
+
+        };
 
     }
 
@@ -46,6 +53,14 @@ void touch_callback(unsigned char event) {
 void cube_callback(unsigned char event) {
 
     switch (event) {
+
+        case CUBE_EVENT_CONNECTED:
+            _state = STATE_CONNECTED;
+            break;
+
+        case CUBE_EVENT_DISCONNECTED:
+            _state = STATE_INTRO;
+            break;
 
         case CUBE_EVENT_4UTURNS:
             if (_state == STATE_CONNECTED) _state = STATE_INSPECT;
@@ -64,7 +79,6 @@ void cube_callback(unsigned char event) {
 
 }
 
-
 void state_machine() {
 
     bool changed_display = false;
@@ -80,6 +94,7 @@ void state_machine() {
     switch (_state) {
 
         case STATE_SLEEPING:
+            sleep();
             _state = STATE_INTRO;
             break;
 
@@ -88,19 +103,16 @@ void state_machine() {
                 display_show_intro();
                 changed_display = true;
             }
-            if (bluetooth_connected()) {
-                _state = STATE_CONNECTED;
-            }
             break;
 
         case STATE_CONNECTED:
+            if (changed_state) {
+                cube_reset();
+            }
             if (cube_updated()) {
                 display_update_cube();
                 display_battery();
                 changed_display = true;
-            }
-            if (!bluetooth_connected()) {
-                _state = STATE_INTRO;
             }
             break;
 
@@ -110,9 +122,6 @@ void state_machine() {
                 display_battery();
                 display_show_ready();
                 changed_display = true;
-            }
-            if (!bluetooth_connected()) {
-                _state = STATE_INTRO;
             }
             break;
 
@@ -131,6 +140,10 @@ void state_machine() {
                 changed_display = true;
             }
             break;
+        
+        case STATE_DISCONNECT:
+            bluetooth_disconnect();
+            _state = STATE_INTRO;
         
         default:
             break;

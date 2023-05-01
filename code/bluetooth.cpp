@@ -3,7 +3,6 @@
 
 #include "config.h"
 #include "bluetooth.h"
-#include "display.h"
 #include "cube.h"
 
 #define MACS_MAX 20
@@ -125,12 +124,11 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
     #endif
 
     // Walk through cubes to identofy the connection
-    bool ok = cube_find(conn_handle);
+    bool ok = cube_bind(conn_handle);
 
     // Process
     if (ok) {
         bluetooth_scan(false);
-        display_clear();
     } else {
         connection->disconnect();
     }
@@ -147,8 +145,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
         Serial.printf("[BLE] Disconnected, reason 0x%02X\n", reason);
     #endif
 
-    cube_reset();
-    display_show_intro();
+    cube_unbind();
     bluetooth_scan(true);
 
 }
