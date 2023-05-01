@@ -124,6 +124,12 @@ void state_machine() {
                 display_battery();
                 changed_display = true;
             }
+            if (changed_state) {
+                #if DEBUG>0
+                    Serial.print("[MAIN] Scramble: ");
+                    Serial.println(cube_scramble());
+                #endif
+            }
             break;
 
         case STATE_INSPECT:

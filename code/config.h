@@ -10,6 +10,7 @@
 #define APP_VERSION                 "v0.5.0"
 #define SHUTDOWN_TIMEOUT            60000
 #define WDT_SECONDS                 30
+#define SCRAMBLE_SIZE               21
 
 // ----------------------------------------------------------------------------
 // BLE

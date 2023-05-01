@@ -30,4 +30,6 @@ unsigned long cube_time();
 unsigned char * cube_cubelets();
 bool cube_updated();
 
+char * cube_scramble();
+
 #endif // _CUBE_H

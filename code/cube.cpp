@@ -18,6 +18,8 @@ uint32_t _cube_start = 0;
 uint32_t _cube_time = 0;
 uint8_t _cube_turns = 0;
 
+char _cube_scramble[SCRAMBLE_SIZE*3+1] = {0};
+
 void (*_cube_callback)(uint8_t event);
 
 static const char CUBE_FACES[] = "URFDLB";
@@ -67,6 +69,53 @@ void cube_unbind() {
 void cube_setup() {
     ganv2_init();
     giiker_init();
+    randomSeed(analogRead(WB_A1));
+}
+
+// ----------------------------------------------------------------------------
+// Scramble
+// ----------------------------------------------------------------------------
+
+char * cube_scramble() {
+
+    uint8_t last_face = 0xFF;
+    uint8_t last_group = 0xFF;
+    uint8_t last_group_count = 0;
+
+    uint8_t pos = 0;
+            
+    for (uint8_t i=0; i<SCRAMBLE_SIZE; i++) {
+
+        uint8_t face;
+
+        do {
+            
+            do {
+                face = random(0, 6);
+            } while (face == last_face);
+            
+            if (last_group == face % 3) {
+                last_group_count++;
+            } else {
+                last_group = face % 3;
+                last_group_count = 0;
+            }
+        
+        } while (last_group_count<3);
+        last_face = face;
+        _cube_scramble[pos++] = CUBE_FACES[face];
+
+        uint8_t dir = random(0, 3);
+        if (1 == dir) _cube_scramble[pos++] = '\'';
+        if (2 == dir) _cube_scramble[pos++] = '2';
+        _cube_scramble[pos++] = ' ';
+
+    }
+    
+    _cube_scramble[pos++] = 0;
+
+    return _cube_scramble;
+
 }
 
 // ----------------------------------------------------------------------------
