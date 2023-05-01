@@ -1,7 +1,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-unsigned char utils_setup();
+void utils_setup();
 
 void sleep();
 

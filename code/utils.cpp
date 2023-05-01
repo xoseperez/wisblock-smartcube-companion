@@ -23,7 +23,7 @@ void wdt_feed() {
     NRF_WDT->RR[0] = WDT_RR_RR_Reload;
 }
 
-unsigned char utils_setup() {
+void utils_setup() {
     pinMode(BAT_MEASUREMENT_GPIO, INPUT);
     analogReference(AR_INTERNAL_3_0);
     analogReadResolution(12);

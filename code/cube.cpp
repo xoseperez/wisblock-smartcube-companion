@@ -14,9 +14,15 @@ uint8_t _cube_turns = 0;
 uint8_t _cube_uturns = 0;
 uint8_t _cube_battery = 0xFF;
 
+void (*_cube_callback)(uint8_t event);
+
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+
+void cube_set_callback(void (*callback)(uint8_t event)) {
+    _cube_callback = callback;
+}
 
 void cube_reset() {
     _cube_turns = 0;
@@ -83,6 +89,7 @@ bool cube_solved(uint8_t * corners, uint8_t * edges) {
     if ((solved) && (_cube_status == 3)) {
         _cube_time = cube_time();
         _cube_status = 1;
+        if (_cube_callback) _cube_callback(CUBE_EVENT_SOLVED);
         #if DEBUG>0
             Serial.printf("[CUB] Solved in %7.3f seconds\n", cube_time() / 1000.0);
         #endif
@@ -94,6 +101,8 @@ bool cube_solved(uint8_t * corners, uint8_t * edges) {
 
 void cube_move(uint8_t face, uint8_t dir) {
 
+    if (_cube_callback) _cube_callback(CUBE_EVENT_MOVE);
+    
     // Moves
     if (_cube_status == 2) {
         _cube_status = 3;
@@ -114,6 +123,7 @@ void cube_move(uint8_t face, uint8_t dir) {
         if (_cube_uturns == 4) {
             _cube_uturns = 0;
             _cube_status = 2;
+            if (_cube_callback) _cube_callback(CUBE_EVENT_4UTURNS);
             #if DEBUG > 0
                 Serial.println("[CUB] 4 U turns in a row! Starting timer on next move.");
             #endif

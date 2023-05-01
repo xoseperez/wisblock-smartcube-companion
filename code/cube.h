@@ -1,12 +1,19 @@
 #ifndef _CUBE_H
 #define _CUBE_H
 
+enum {
+    CUBE_EVENT_MOVE,
+    CUBE_EVENT_4UTURNS,
+    CUBE_EVENT_SOLVED
+};
+
 bool cube_solved(uint8_t * corners, uint8_t * edges);
 void cube_move(uint8_t face, uint8_t dir);
 void cube_state(uint8_t * corners, uint8_t * edges, const unsigned char cfacelet[8][3], const unsigned char efacelet[12][2]);
 
 void cube_set_battery(uint8_t battery);
 uint8_t cube_get_battery();
+void cube_set_callback(void (*callback)(uint8_t event));
 
 bool cube_find(uint8_t conn_handle);
 void cube_setup();
