@@ -91,6 +91,9 @@ unsigned long cube_time() {
     return _cube_time;
 }
 
+bool cube_running_metrics() {
+    return _cube_running_metrics;
+}
 unsigned short cube_turns() {
     return _cube_turns;
 }

@@ -206,8 +206,13 @@ void display_show_timer() {
 
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
-    display_text(buffer, 226, 180, DISPLAY_ALIGN_CENTER);
-    sprintf(buffer, "TURNS %d | TPS %2.1f", turns, tps);
+    display_text(buffer, 226, 180, DISPLAY_ALIGN_CENTER);  
+     
+    if (cube_running_metrics()) {
+        sprintf(buffer, "TURNS %d", turns);
+    } else {
+        sprintf(buffer, "TURNS %d | TPS %2.1f", turns, tps);
+    }
     _display_canvas.setTextSize(1);
     display_text(buffer, 226, 200, DISPLAY_ALIGN_CENTER);
 

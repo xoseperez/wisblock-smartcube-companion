@@ -23,6 +23,7 @@ void cube_unbind();
 
 void cube_metrics_start();
 void cube_metrics_end();
+bool cube_running_metrics();
 unsigned short cube_turns();
 unsigned long cube_time();
 
