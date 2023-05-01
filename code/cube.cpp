@@ -32,11 +32,6 @@ void cube_set_callback(void (*callback)(uint8_t event)) {
     _cube_callback = callback;
 }
 
-void cube_reset() {
-    _cube_turns = 0;
-    _cube_updated = false;
-}
-
 uint8_t cube_get_battery() {
     return _cube_battery;
 }
@@ -64,7 +59,6 @@ bool cube_bind(uint8_t conn_handle) {
 }
 
 void cube_unbind() {
-    //cube_reset();
     _cube_battery = 0xFF;
     if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_DISCONNECTED);
     _cube_connected = false;

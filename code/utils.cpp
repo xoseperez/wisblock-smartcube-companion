@@ -93,7 +93,6 @@ void sleep() {
 
     delay(100);
 
-    //cube_reset();
     bluetooth_scan(true);
     display_on();
     display_show_intro();
