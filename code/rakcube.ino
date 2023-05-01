@@ -81,13 +81,17 @@ void cube_callback(unsigned char event) {
 
 void state_machine() {
 
+    static unsigned long last_change = millis();
     bool changed_display = false;
     bool changed_state = (_state_old != _state);
     _state_old = _state;
 
-    #if DEBUG>1
-        if (changed_state) Serial.printf("[MAIN] State %d\n", _state);
-    #endif
+    if (changed_state) {
+        last_change = millis();
+        #if DEBUG>1
+            Serial.printf("[MAIN] State %d\n", _state);
+        #endif
+    }
 
     display_start_transaction();
 
@@ -102,6 +106,9 @@ void state_machine() {
             if (changed_state) {
                 display_show_intro();
                 changed_display = true;
+            }
+            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+                _state = STATE_SLEEPING;
             }
             break;
 

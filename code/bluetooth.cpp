@@ -123,11 +123,8 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
         );
     #endif
 
-    // Walk through cubes to identofy the connection
-    bool ok = cube_bind(conn_handle);
-
-    // Process
-    if (ok) {
+    // Check if device is a supported cube
+    if (cube_bind(conn_handle)) {
         bluetooth_scan(false);
     } else {
         connection->disconnect();
@@ -231,5 +228,4 @@ void bluetooth_setup() {
 }
 
 void bluetooth_loop() {
-
 }

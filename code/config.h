@@ -5,39 +5,40 @@
 // General
 // ----------------------------------------------------------------------------
 
-#define APP_NAME            "RAK MAGIC CUBE"
-#define APP_VERSION         "v0.1.0"
-#define DISPLAY_TIMEOUT     10000
-#define WDT_SECONDS         30
+#define APP_NAME                    "MAGIC CUBE TIMER"
+#define APP_SHORT_NAME              "TIMER"
+#define APP_VERSION                 "v0.5.0"
+#define SHUTDOWN_TIMEOUT            60000
+#define WDT_SECONDS                 30
 
 // ----------------------------------------------------------------------------
 // BLE
 // ----------------------------------------------------------------------------
 
 // nRF52832: -40dBm, -20dBm, -16dBm, -12dBm, -8dBm, -4dBm, 0dBm, +3dBm and +4dBm.
-#define BLE_TX_POWER        -16
-#define BLE_NAME            "RAKcube"
-#define BLE_RSSI_FILTER     -45
-#define BLE_TIMEOUT         1000
+#define BLE_TX_POWER                -16
+#define BLE_NAME                    APP_NAME
+#define BLE_RSSI_FILTER             -45
+#define BLE_TIMEOUT                 1000
 
 // ----------------------------------------------------------------------------
 // Display
 // ----------------------------------------------------------------------------
 
-#define DISPLAY_CS_GPIO       SS
-#define DISPLAY_BL_GPIO       WB_IO3
-#define DISPLAY_RST_GPIO      WB_IO5
-#define DISPLAY_DC_GPIO       WB_IO4
+#define DISPLAY_CS_GPIO             SS
+#define DISPLAY_BL_GPIO             WB_IO3
+#define DISPLAY_RST_GPIO            WB_IO5
+#define DISPLAY_DC_GPIO             WB_IO4
 
 // ----------------------------------------------------------------------------
 // Touch
 // ----------------------------------------------------------------------------
 
-#define TOUCH_INT_PIN         WB_IO6
+#define TOUCH_INT_PIN               WB_IO6
 
-// ---------------------------------------------------
-// BATTERY
-// ---------------------------------------------------
+// ----------------------------------------------------------------------------
+// Battery
+// ----------------------------------------------------------------------------
 
 #define BAT_MEASUREMENT_GPIO        WB_A0
 
