@@ -1,7 +1,7 @@
 #ifndef _DISPLAY_H
 #define _DISPLAY_H
 
-void display_update_cube(unsigned char size = 20);
+void display_update_cube(uint16_t center_x = 0, uint16_t center_y = 0, unsigned char size = 20);
 
 void display_page_intro();
 void display_page_connected();
