@@ -179,8 +179,8 @@ void display_show_timer() {
 
 
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    _display_canvas.setTextSize(2);
-    display_text(buffer, 226, 180, DISPLAY_ALIGN_CENTER);  
+    _display_canvas.setTextSize(4);
+    display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
      
     if (cube_running_metrics()) {
         sprintf(buffer, "TURNS %d", turns);
@@ -188,7 +188,7 @@ void display_show_timer() {
         sprintf(buffer, "TURNS %d | TPS %2.1f", turns, tps);
     }
     _display_canvas.setTextSize(1);
-    display_text(buffer, 226, 200, DISPLAY_ALIGN_CENTER);
+    display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
 }
 
@@ -215,21 +215,20 @@ void display_page_connected() {
 }
 
 void display_page_inspect() {
-    display_update_cube();
     display_battery();
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    _display_canvas.setTextSize(2);
-    display_text((char *) "READY...  ", 175, 180, 0);
+    _display_canvas.setTextSize(4);
+    display_text((char *) "INSPECT", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    _display_canvas.setTextSize(1);
+    display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 }
 
 void display_page_timer() {
-    display_update_cube();
     display_battery();
     display_show_timer();
 }
 
 void display_page_solved() {
-    display_update_cube();
     display_battery();
     display_show_timer();
 }

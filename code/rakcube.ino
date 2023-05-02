@@ -48,6 +48,14 @@ void touch_callback(unsigned char event) {
 
     }
 
+    if (event == TOUCH_EVENT_SWIPE_LEFT) {
+
+        if (_state == STATE_CONNECTED) {
+            _state = STATE_INSPECT;
+        }
+
+    }
+
 }
 
 void cube_callback(unsigned char event) {
