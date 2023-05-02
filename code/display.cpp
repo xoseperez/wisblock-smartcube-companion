@@ -133,14 +133,6 @@ void display_text(char * text, uint16_t x, uint16_t y, uint8_t align) {
 
 }
 
-// ----------------------------------------------------------------------------
-// Private
-// ----------------------------------------------------------------------------
-
-void display_clear() {
-    _display_screen.fillScreen(ST77XX_BLACK);
-}
-
 void display_battery() {
     
     uint8_t battery;
@@ -168,24 +160,6 @@ void display_battery() {
         display_text(buffer, 310, 20, DISPLAY_ALIGN_RIGHT);
     }
 
-}
-
-void display_show_intro() {
-    
-    display_clear();
-    display_draw_bmp(&bmp_cube_info, 20, 20);
-    _display_canvas.setTextSize(0);
-    _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
-    display_text((char *) APP_NAME, 310, 210, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
-    display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    display_text((char *) "Connect cube...", 310, 230, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
-    display_battery();
-
-}
-
-void display_hide_timer() {
-    _display_canvas.fillRect(160, 180, 150, 40, ST77XX_BLACK);
 }
 
 void display_show_timer() {
@@ -218,11 +192,49 @@ void display_show_timer() {
 
 }
 
-void display_show_ready() {
+// ----------------------------------------------------------------------------
+// Public
+// ----------------------------------------------------------------------------
+
+void display_page_intro() {
+    
+    display_draw_bmp(&bmp_cube_info, 20, 20);
+    _display_canvas.setTextSize(0);
+    _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    display_text((char *) APP_NAME, 310, 210, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
+    display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    display_text((char *) "Connect cube...", 310, 230, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
+    display_battery();
+
+}
+
+void display_page_connected() {
+    display_update_cube();
+    display_battery();
+}
+
+void display_page_inspect() {
+    display_update_cube();
+    display_battery();
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
     display_text((char *) "READY...  ", 175, 180, 0);
 }
+
+void display_page_timer() {
+    display_update_cube();
+    display_battery();
+    display_show_timer();
+}
+
+void display_page_solved() {
+    display_update_cube();
+    display_battery();
+    display_show_timer();
+}
+
+// ----------------------------------------------------------------------------
 
 void display_off() {
     digitalWrite(DISPLAY_BL_GPIO, LOW);
@@ -234,6 +246,8 @@ void display_on() {
     digitalWrite(DISPLAY_BL_GPIO, HIGH);
 }
 
+// ----------------------------------------------------------------------------
+
 void display_start_transaction() {
     _display_canvas.fillScreen(ST77XX_BLACK);
 }
@@ -241,6 +255,8 @@ void display_start_transaction() {
 void display_end_transaction() {
     _display_screen.drawRGBBitmap(0, 0, _display_canvas.getBuffer(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
 }
+
+// ----------------------------------------------------------------------------
 
 void display_setup(void) {
   

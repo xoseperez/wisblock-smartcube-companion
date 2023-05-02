@@ -43,7 +43,6 @@ void sleep() {
 
     _utils_sleeping = true;
 
-    display_clear();
     display_off();
     bluetooth_scan(false);
 
@@ -95,7 +94,6 @@ void sleep() {
 
     bluetooth_scan(true);
     display_on();
-    display_show_intro();
     touch_setup(TOUCH_INT_PIN);
 
     #if DEBUG > 0

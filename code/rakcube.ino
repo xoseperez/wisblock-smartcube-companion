@@ -110,7 +110,7 @@ void state_machine() {
 
         case STATE_INTRO:
             if (changed_state) {
-                display_show_intro();
+                display_page_intro();
                 changed_display = true;
             }
             if (millis() - last_change > SHUTDOWN_TIMEOUT) {
@@ -120,8 +120,7 @@ void state_machine() {
 
         case STATE_CONNECTED:
             if (cube_updated()) {
-                display_update_cube();
-                display_battery();
+                display_page_connected();
                 changed_display = true;
             }
             if (changed_state) {
@@ -134,25 +133,19 @@ void state_machine() {
 
         case STATE_INSPECT:
             if (changed_state) {
-                display_update_cube();
-                display_battery();
-                display_show_ready();
+                display_page_inspect();
                 changed_display = true;
             }
             break;
 
         case STATE_TIMER:
-            display_update_cube();
-            display_battery();
-            display_show_timer();
+            display_page_timer();
             changed_display = true;
             break;
 
         case STATE_RESULT:
             if (changed_state) {
-                display_update_cube();
-                display_battery();
-                display_show_timer();
+                display_page_solved();
                 changed_display = true;
             }
             break;

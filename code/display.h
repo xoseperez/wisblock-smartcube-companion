@@ -1,19 +1,21 @@
 #ifndef _DISPLAY_H
 #define _DISPLAY_H
 
+void display_update_cube(unsigned char size = 20);
+
+void display_page_intro();
+void display_page_connected();
+void display_page_inspect();
+void display_page_timer();
+void display_page_solved();
+
 void display_on();
 void display_off();
-void display_clear();
-void display_show_intro();
-void display_show_cube();
-void display_battery();
-void display_setup(void);
-void display_loop();
-void display_update_cube(unsigned char size = 20);
-void display_show_timer();
-void display_hide_timer();
-void display_show_ready();
+
 void display_start_transaction();
 void display_end_transaction();
+
+void display_setup(void);
+void display_loop();
 
 #endif // _DISPLAY_H
