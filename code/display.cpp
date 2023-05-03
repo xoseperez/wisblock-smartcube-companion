@@ -46,6 +46,135 @@ static void display_draw_bmp(const GUI_BITMAP *bmp, uint8_t x, uint8_t y) {
     }
 }
 
+int16_t display_points[27][4][3] = {0};
+float display_matrix[3][3] = {0};
+float display_angle_alpha = 150.0 * PI / 180.0; // z axis
+float display_angle_beta = 180.0 * PI / 180.0; // y axis
+float display_angle_gamma = 20.0 * PI / 180.0; // x axis
+
+void display_update_cube_3d_init() {
+
+    uint8_t index = 0;
+    int16_t x, y, z;
+    int16_t size = 26;
+    int16_t gap = 6;
+    int16_t start = 1.5 * size + gap;
+    
+    // white face
+    x = -start;
+    y = -start;
+    z = start + gap / 2;
+    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
+            display_points[index][k][1] = y + i * (size + gap) + ((k == 2 || k == 3) ? size : 0);
+            display_points[index][k][2] = z;
+        }
+        index++;
+    }
+
+    // red face
+    x = start + gap / 2;
+    y = start;
+    z = start;
+    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points[index][k][0] = x;
+            display_points[index][k][1] = y - j * (size + gap) - ((k == 1 || k == 2) ? size : 0);
+            display_points[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
+        }
+        index++;
+    }
+
+    // green face
+    x = -start;
+    y = start + gap / 2;
+    z = start;
+    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
+            display_points[index][k][1] = y;
+            display_points[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
+        }
+        index++;
+    }
+
+    // Show points
+    /*
+    for (index = 0; index < 27; index++) {
+        Serial.printf("[CUB] (%d, %d, %d), (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)\n", 
+            display_points[index][0][0], display_points[index][0][1], display_points[index][0][2], 
+            display_points[index][1][0], display_points[index][1][1], display_points[index][1][2], 
+            display_points[index][2][0], display_points[index][2][1], display_points[index][2][2], 
+            display_points[index][3][0], display_points[index][3][1], display_points[index][3][2]
+        );
+    }
+    */
+
+    // Calculate angles
+    float sin_alpha = sin(display_angle_alpha);
+    float cos_alpha = cos(display_angle_alpha);
+    float sin_beta  = sin(display_angle_beta);
+    float cos_beta  = cos(display_angle_beta);
+    float sin_gamma = sin(display_angle_gamma);
+    float cos_gamma = cos(display_angle_gamma);
+
+    // Define matrix
+    display_matrix[0][0] = cos_alpha * cos_beta;
+    display_matrix[0][1] = cos_alpha * sin_beta * sin_gamma - sin_alpha * cos_gamma;
+    display_matrix[0][2] = cos_alpha * sin_beta * cos_gamma + sin_alpha * sin_gamma;
+    display_matrix[1][0] = sin_alpha * cos_beta;
+    display_matrix[1][1] = sin_alpha * sin_beta * sin_gamma + cos_alpha * cos_gamma;
+    display_matrix[1][2] = sin_alpha * sin_beta * cos_gamma - cos_alpha * sin_gamma;
+    display_matrix[2][0] = -sin_beta;
+    display_matrix[2][1] = cos_beta * sin_gamma;
+    display_matrix[2][2] = cos_beta * cos_gamma;
+
+}
+
+void display_update_cube_3d() {
+
+    // Get cubelets
+    unsigned char * cubelets = cube_cubelets();
+
+    // translate cubelets to _cube_colors
+    uint8_t cc[27] = {0};
+    for (uint8_t i=0; i<27; i++) {
+      if (cubelets[i] == 'U') cc[i] = 0;
+      if (cubelets[i] == 'R') cc[i] = 1;
+      if (cubelets[i] == 'F') cc[i] = 2;
+      if (cubelets[i] == 'D') cc[i] = 3;
+      if (cubelets[i] == 'L') cc[i] = 4;
+      if (cubelets[i] == 'B') cc[i] = 5;
+    }
+
+    int16_t points[4][3];
+    int16_t offset[3] = { DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, DISPLAY_HEIGHT / 2};
+
+    for (uint8_t cubelet=0; cubelet<27; cubelet++) {
+        
+        // Rotate points
+        for (uint8_t vertex=0; vertex<4; vertex++) {
+            for (uint8_t coordinate=0; coordinate<3; coordinate++) {
+                points[vertex][coordinate] = 
+                    display_matrix[0][coordinate] * display_points[cubelet][vertex][0] +
+                    display_matrix[1][coordinate] * display_points[cubelet][vertex][1] +
+                    display_matrix[2][coordinate] * display_points[cubelet][vertex][2] +
+                    offset[coordinate];
+            }
+        }
+
+        //Serial.printf("[CUB] (%d, %d), (%d, %d), (%d, %d), (%d, %d)\n", points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1], points[3][0], points[3][1]);
+
+        // Show cubelet
+        _display_canvas.fillTriangle(points[0][0], points[0][2], points[1][0], points[1][2], points[2][0], points[2][2], _cube_colors[cc[cubelet]]);
+        _display_canvas.fillTriangle(points[0][0], points[0][2], points[2][0], points[2][2], points[3][0], points[3][2], _cube_colors[cc[cubelet]]);
+
+    }
+
+}
+
+
 void display_update_cube(uint16_t center_x, uint16_t center_y, unsigned char size) {
 
     // Get cubelets
@@ -211,8 +340,13 @@ void display_page_intro() {
 
 }
 
-void display_page_connected() {
+void display_page_2d() {
     display_update_cube();
+    display_battery();
+}
+
+void display_page_3d() {
+    display_update_cube_3d();
     display_battery();
 }
 
@@ -269,6 +403,8 @@ void display_setup(void) {
 
     _display_screen.init(DISPLAY_HEIGHT, DISPLAY_WIDTH); // reversed
     _display_screen.setRotation(3);
+
+    display_update_cube_3d_init();
 
     #if DEBUG > 0
         Serial.printf("[TFT] Initialized\n");

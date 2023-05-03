@@ -11,14 +11,15 @@
 enum {
     STATE_SLEEPING,
     STATE_INTRO,
-    STATE_CONNECTED,
+    STATE_2D,
+    STATE_3D,
     STATE_INSPECT,
     STATE_TIMER,
     STATE_RESULT,
     STATE_DISCONNECT
 };
 
-unsigned char _state_old = STATE_SLEEPING;
+unsigned char _last_state = STATE_SLEEPING;
 unsigned char _state = STATE_INTRO;
 
 void touch_callback(unsigned char event) {
@@ -31,14 +32,15 @@ void touch_callback(unsigned char event) {
                 _state = STATE_SLEEPING;
                 break;
 
-            case STATE_CONNECTED:
+            case STATE_2D:
+            case STATE_3D:
                 _state = STATE_DISCONNECT;
                 break;
 
             case STATE_INSPECT:
             case STATE_TIMER:
             case STATE_RESULT:
-                _state = STATE_CONNECTED;
+                _state = STATE_2D;
                 break;
 
             default:
@@ -50,9 +52,15 @@ void touch_callback(unsigned char event) {
 
     if (event == TOUCH_EVENT_SWIPE_LEFT) {
 
-        if (_state == STATE_CONNECTED) {
-            _state = STATE_INSPECT;
-        }
+        if (_state == STATE_3D) _state = STATE_INSPECT;
+        if (_state == STATE_2D) _state = STATE_3D;
+
+    }
+
+    if (event == TOUCH_EVENT_SWIPE_RIGHT) {
+
+        if (_state == STATE_3D) _state = STATE_2D;
+        if (_state == STATE_INSPECT) _state = STATE_3D;
 
     }
 
@@ -63,7 +71,7 @@ void cube_callback(unsigned char event) {
     switch (event) {
 
         case CUBE_EVENT_CONNECTED:
-            _state = STATE_CONNECTED;
+            _state = STATE_2D;
             break;
 
         case CUBE_EVENT_DISCONNECTED:
@@ -71,7 +79,7 @@ void cube_callback(unsigned char event) {
             break;
 
         case CUBE_EVENT_4UTURNS:
-            if (_state == STATE_CONNECTED) _state = STATE_INSPECT;
+            if ((_state == STATE_2D) || (_state == STATE_3D)) _state = STATE_INSPECT;
             break;
 
         case CUBE_EVENT_MOVE:
@@ -79,7 +87,7 @@ void cube_callback(unsigned char event) {
                 cube_metrics_start();
                 _state = STATE_TIMER;
             }
-            if (_state == STATE_RESULT) _state = STATE_CONNECTED;
+            if (_state == STATE_RESULT) _state = STATE_2D;
             break;
 
         case CUBE_EVENT_SOLVED:
@@ -97,8 +105,9 @@ void state_machine() {
 
     static unsigned long last_change = millis();
     bool changed_display = false;
-    bool changed_state = (_state_old != _state);
-    _state_old = _state;
+    bool changed_state = (_last_state != _state);
+    unsigned char prev_state = _last_state;
+    _last_state = _state;
 
     if (changed_state) {
         last_change = millis();
@@ -126,9 +135,9 @@ void state_machine() {
             }
             break;
 
-        case STATE_CONNECTED:
-            if (cube_updated()) {
-                display_page_connected();
+        case STATE_2D:
+            if (cube_updated() || (prev_state == STATE_3D)) {
+                display_page_2d();
                 changed_display = true;
             }
             if (changed_state) {
@@ -136,6 +145,13 @@ void state_machine() {
                     Serial.print("[MAIN] Scramble: ");
                     Serial.println(cube_scramble());
                 #endif
+            }
+            break;
+
+        case STATE_3D:
+            if (cube_updated() || (prev_state == STATE_2D)) {
+                display_page_3d();
+                changed_display = true;
             }
             break;
 
@@ -178,7 +194,7 @@ void setup() {
     #ifdef DEBUG
         Serial.begin(115200);
 		while ((!Serial) && (millis() < 2000)) delay(10);
-		Serial.printf("\n[MAIN] RAKcube\n\n");
+		Serial.printf("\n[MAIN] %s %s\n\n", APP_NAME, APP_VERSION);
     #endif
 
     wdt_set(WDT_SECONDS);
