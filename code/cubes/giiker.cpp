@@ -14,7 +14,7 @@ static const unsigned char GIIKER_CORNER_FACELET[8][3] = {
 	{51, 35, 17},
 	{45, 11, 2},
 	{47, 0, 36},
-	{53, 42, 3}
+	{53, 42, 33}
 };
 static const unsigned char GIIKER_EDGE_FACELET[12][2] = {
 	{25, 28},
@@ -28,7 +28,7 @@ static const unsigned char GIIKER_EDGE_FACELET[12][2] = {
 	{52, 34},
 	{48, 14},
 	{46, 1},
-	{50, 3}
+	{50, 39}
 };
 static const uint8_t GIIKER_KEY[] = { 176, 81, 104, 224, 86, 137, 237, 119, 38, 26, 193, 161, 210, 126, 150, 81, 93, 13, 236, 249, 89, 235, 88, 24, 113, 81, 214, 131, 130, 199, 2, 169, 39, 165, 171, 41 };
 
