@@ -7,12 +7,14 @@
 #include "display.h"
 #include "touch.h"
 #include "cube.h"
+#include "ring.h"
 
 enum {
     STATE_SLEEPING,
     STATE_INTRO,
     STATE_2D,
     STATE_3D,
+    STATE_SCRAMBLE,
     STATE_INSPECT,
     STATE_TIMER,
     STATE_RESULT,
@@ -21,6 +23,44 @@ enum {
 
 unsigned char _last_state = STATE_SLEEPING;
 unsigned char _state = STATE_INTRO;
+Ring _ring;
+bool _scramble_update = false;
+
+bool scramble_update(uint8_t move) {
+
+    if (_ring.available() == 0) return false;
+
+    uint8_t reverse = cube_move_reverse(move);
+    uint8_t sum = cube_move_sum(reverse, _ring.peek());
+    int response;
+
+    // cannot be summed (different face)
+    if (sum == 0xFF) {
+        response = _ring.prepend(reverse);
+        if (response == -1) return false;
+    
+    // cancels the first movement
+    } else if (sum == 0xFE) {
+        response = _ring.read();
+        if (response == -1) return false;
+
+    // there is a non-null sum
+    } else {
+        response = _ring.replace(sum);
+        if (response == -1) return false;
+
+    }
+
+    if (_ring.available() == 0) {
+        _state = STATE_INSPECT;
+    } else {
+        _scramble_update = true;
+    }
+    return true;
+
+}
+
+
 
 void touch_callback(unsigned char event) {
     
@@ -40,6 +80,7 @@ void touch_callback(unsigned char event) {
             case STATE_INSPECT:
             case STATE_TIMER:
             case STATE_RESULT:
+            case STATE_SCRAMBLE:
                 _state = STATE_2D;
                 break;
 
@@ -52,7 +93,7 @@ void touch_callback(unsigned char event) {
 
     if (event == TOUCH_EVENT_SWIPE_LEFT) {
 
-        if (_state == STATE_3D) _state = STATE_INSPECT;
+        if (_state == STATE_3D) _state = STATE_SCRAMBLE;
         if (_state == STATE_2D) _state = STATE_3D;
 
     }
@@ -60,13 +101,13 @@ void touch_callback(unsigned char event) {
     if (event == TOUCH_EVENT_SWIPE_RIGHT) {
 
         if (_state == STATE_3D) _state = STATE_2D;
-        if (_state == STATE_INSPECT) _state = STATE_3D;
+        if (_state == STATE_SCRAMBLE) _state = STATE_3D;
 
     }
 
 }
 
-void cube_callback(unsigned char event) {
+void cube_callback(unsigned char event, uint8_t * data) {
 
     switch (event) {
 
@@ -83,11 +124,16 @@ void cube_callback(unsigned char event) {
             break;
 
         case CUBE_EVENT_MOVE:
+            if (_state == STATE_RESULT) _state = STATE_2D;
             if (_state == STATE_INSPECT) {
                 cube_metrics_start();
                 _state = STATE_TIMER;
             }
-            if (_state == STATE_RESULT) _state = STATE_2D;
+            if (_state == STATE_SCRAMBLE) {
+                if (!scramble_update(data[0])) {
+                    _state = STATE_2D;    
+                }
+            }
             break;
 
         case CUBE_EVENT_SOLVED:
@@ -140,18 +186,24 @@ void state_machine() {
                 display_page_2d();
                 changed_display = true;
             }
-            if (changed_state) {
-                #if DEBUG>0
-                    Serial.print("[MAIN] Scramble: ");
-                    Serial.println(cube_scramble());
-                #endif
-            }
             break;
 
         case STATE_3D:
             if (cube_updated() || (prev_state == STATE_2D)) {
                 display_page_3d();
                 changed_display = true;
+            }
+            break;
+
+        case STATE_SCRAMBLE:
+            if (changed_state) {
+                cube_scramble(&_ring, SCRAMBLE_SIZE);
+                _scramble_update = true;
+            }
+            if (_scramble_update) {
+                display_page_scramble(&_ring);
+                changed_display = true;
+                _scramble_update = false;
             }
             break;
 

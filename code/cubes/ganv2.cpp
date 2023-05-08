@@ -94,7 +94,7 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
 
             // Moves
             uint8_t turn = utils_get_bits(data, 12, 5);
-            cube_move(turn >> 1, turn & 0x01);
+            cube_move(turn >> 1, (turn & 0x01) ? 3 : 1);
 
         } else if (4 == mode) { // Cube state
 

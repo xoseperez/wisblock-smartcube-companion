@@ -8,6 +8,7 @@
 #include "bluetooth.h"
 #include "cube.h"
 #include "utils.h"
+#include "ring.h"
 
 #include "assets/bmp_cube.h"
 
@@ -350,13 +351,37 @@ void display_page_3d() {
     display_battery();
 }
 
+void display_page_scramble(Ring * ring) {
+
+    display_battery();
+    char buffer[20];
+
+    
+  
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+
+    _display_canvas.setTextSize(2);
+    display_text((char *) "SCRAMBLE", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-50, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    uint8_t move = ring->peek();
+    char * text = cube_turn_text(move);
+    _display_canvas.setTextSize(6);
+    display_text(text, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    _display_canvas.setTextSize(1);
+    sprintf(buffer, "%d TURNS TO GO", ring->available());
+    display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+
+}
+
 void display_page_inspect() {
     display_battery();
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    _display_canvas.setTextSize(4);
+    _display_canvas.setTextSize(6);
     display_text((char *) "INSPECT", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     _display_canvas.setTextSize(1);
-    display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+30, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 }
 
 void display_page_timer() {

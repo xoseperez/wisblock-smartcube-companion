@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "cube.h"
+#include "ring.h"
 #include "cubes/ganv2.h"
 #include "cubes/giiker.h"
 
@@ -18,9 +19,9 @@ uint32_t _cube_start = 0;
 uint32_t _cube_time = 0;
 uint8_t _cube_turns = 0;
 
-char _cube_scramble[SCRAMBLE_SIZE*3+1] = {0};
+char _cube_step[4] = {0};
 
-void (*_cube_callback)(uint8_t event);
+void (*_cube_callback)(uint8_t event, uint8_t * data);
 
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -30,7 +31,7 @@ static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 2
 // Public
 // ----------------------------------------------------------------------------
 
-void cube_set_callback(void (*callback)(uint8_t event)) {
+void cube_set_callback(void (*callback)(uint8_t event, uint8_t * data)) {
     _cube_callback = callback;
 }
 
@@ -55,14 +56,14 @@ bool cube_bind(uint8_t conn_handle) {
     _cube_connected = _cube_connected || ganv2_start(conn_handle);
     _cube_connected = _cube_connected || giiker_start(conn_handle);
 
-    if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_CONNECTED);
+    if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_CONNECTED, nullptr);
     return _cube_connected;
 
 }
 
 void cube_unbind() {
     _cube_battery = 0xFF;
-    if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_DISCONNECTED);
+    if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_DISCONNECTED, nullptr);
     _cube_connected = false;
 }
 
@@ -76,15 +77,21 @@ void cube_setup() {
 // Scramble
 // ----------------------------------------------------------------------------
 
-char * cube_scramble() {
+void cube_scramble(Ring * moves, uint8_t size) {
 
     uint8_t last_face = 0xFF;
     uint8_t last_group = 0xFF;
     uint8_t last_group_count = 0;
+    
+    // clear buffer
+    moves->clear();
+    if (size > moves->size()) return;
 
-    uint8_t pos = 0;
-            
-    for (uint8_t i=0; i<SCRAMBLE_SIZE; i++) {
+    #if DEBUG>0
+        Serial.print("[CUB] Scramble: ");
+    #endif
+
+    for (uint8_t i=0; i<size; i++) {
 
         uint8_t face;
 
@@ -103,18 +110,62 @@ char * cube_scramble() {
         
         } while (last_group_count<3);
         last_face = face;
-        _cube_scramble[pos++] = CUBE_FACES[face];
 
-        uint8_t dir = random(0, 3);
-        if (1 == dir) _cube_scramble[pos++] = '\'';
-        if (2 == dir) _cube_scramble[pos++] = '2';
-        _cube_scramble[pos++] = ' ';
+        uint8_t count = random(1, 4);
+        uint8_t move = (count << 4) + (face & 0x0F);
+        #if DEBUG>0
+            Serial.print(cube_turn_text(move));
+            Serial .print(" ");
+        #endif
+        moves->append(move);
 
     }
     
-    _cube_scramble[pos++] = 0;
+    #if DEBUG>0
+        Serial.println();
+    #endif
+}
 
-    return _cube_scramble;
+char * cube_turn_text(uint8_t code) {
+
+    uint8_t pos = 0;
+    uint8_t face = code & 0x0F;
+    uint8_t count = (code & 0xF0) >> 4;
+
+    _cube_step[pos++] = CUBE_FACES[face];
+    if (2 == count) _cube_step[pos++] = '2';
+    if (3 == count) _cube_step[pos++] = '\'';
+    //_cube_step[pos++] = ' ';
+    _cube_step[pos++] = 0;
+
+    return _cube_step;
+
+}
+
+uint8_t cube_move_reverse(uint8_t move) {
+    uint8_t face = (move & 0x0F);
+    uint8_t count = (move & 0xF0) >> 4;
+    count = 4 - count;
+    return (count << 4) + face;
+}
+
+uint8_t cube_move_sum(uint8_t move1, uint8_t move2) {
+    
+    uint8_t face1 = move1 & 0x0F;
+    uint8_t face2 = move2 & 0x0F;
+    if (face1 != face2) return 0xFF;
+
+    // 1 () + 1 () = 2 (2)
+    // 1 () + 3 (') = cancel
+    // 1 () + 2 (2) = 3 (')
+    // 3 (') + 3 (') = 2 (2)
+    // 3 (') + 2 (2) = 1 ()
+    // 2 (2) + 2 (2) = cancel
+
+    uint8_t dir = ((move1 >> 4) + (move2 >> 4)) % 4;
+    if (dir == 0) return 0xFE;
+
+    return (dir << 4) + face1;
 
 }
 
@@ -163,25 +214,30 @@ bool cube_solved(uint8_t * corners, uint8_t * edges) {
         (memcmp(CUBE_SOLVED_EDGES, edges, 12) == 0));
 
     if (solved) {
-        if (_cube_callback) _cube_callback(CUBE_EVENT_SOLVED);
+        if (_cube_callback) _cube_callback(CUBE_EVENT_SOLVED, nullptr);
     }
 
     return solved;
 
 }
 
-void cube_move(uint8_t face, uint8_t dir) {
+// count is the number of turns clockwise, hence:
+// U has count=1
+// U2 has count=2
+// U' has count=3
+void cube_move(uint8_t face, uint8_t count) {
 
     _cube_last_move_millis = millis();
 
-    if (_cube_callback) _cube_callback(CUBE_EVENT_MOVE);
+    uint8_t data[1] = { ((count & 0x0F) << 4) | (face & 0x0F) };
+    if (_cube_callback) _cube_callback(CUBE_EVENT_MOVE, data);
     
     // Metrics
     if (_cube_running_metrics) _cube_turns++;
 
     // Check U turns
     static unsigned long uturns = 0;
-    if ((0 == face) && (0 == dir)) {
+    if ((0 == face) && (1 == count)) {
         uturns += 1;
     } else {
         uturns = 0;
@@ -189,14 +245,14 @@ void cube_move(uint8_t face, uint8_t dir) {
     if (uturns == 4) {
         uturns = 0;
         uturns = 2;
-        if (_cube_callback) _cube_callback(CUBE_EVENT_4UTURNS);
+        if (_cube_callback) _cube_callback(CUBE_EVENT_4UTURNS, nullptr);
     }
 
     #if DEBUG > 1
         Serial.print("[CUB] Move: ");
         Serial.print(CUBE_FACES[face]);
-        if (1 == dir) Serial.print("'");
-        if (2 == dir) Serial.print("2");
+        if (2 == count) Serial.print("2");
+        if (3 == count) Serial.print("'");
         Serial.println();
     #endif
     

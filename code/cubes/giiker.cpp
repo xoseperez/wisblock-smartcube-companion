@@ -96,10 +96,7 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
         }   
 
         // Moves
-        uint8_t dir = 0;
-        if (2 == decoded[33]) dir = 2;
-        if (3 == decoded[33]) dir = 1;
-        cube_move(GIIKER_FACE_MAP[decoded[32]-1], dir);
+        cube_move(GIIKER_FACE_MAP[decoded[32]-1], decoded[33]);
 
         // Solved
         cube_solved(cube_corners, cube_edges);
