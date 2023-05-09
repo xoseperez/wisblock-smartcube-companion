@@ -57,8 +57,8 @@ void display_update_cube_3d_init() {
 
     uint8_t index = 0;
     int16_t x, y, z;
-    int16_t size = 26;
-    int16_t gap = 6;
+    int16_t size = 40;
+    int16_t gap = 8;
     int16_t start = 1.5 * size + gap;
     
     // white face
@@ -99,18 +99,6 @@ void display_update_cube_3d_init() {
         }
         index++;
     }
-
-    // Show points
-    /*
-    for (index = 0; index < 27; index++) {
-        Serial.printf("[CUB] (%d, %d, %d), (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)\n", 
-            display_points[index][0][0], display_points[index][0][1], display_points[index][0][2], 
-            display_points[index][1][0], display_points[index][1][1], display_points[index][1][2], 
-            display_points[index][2][0], display_points[index][2][1], display_points[index][2][2], 
-            display_points[index][3][0], display_points[index][3][1], display_points[index][3][2]
-        );
-    }
-    */
 
     // Calculate angles
     float sin_alpha = sin(display_angle_alpha);
@@ -164,8 +152,6 @@ void display_update_cube_3d() {
                     offset[coordinate];
             }
         }
-
-        //Serial.printf("[CUB] (%d, %d), (%d, %d), (%d, %d), (%d, %d)\n", points[0][0], points[0][1], points[1][0], points[1][1], points[2][0], points[2][1], points[3][0], points[3][1]);
 
         // Show cubelet
         _display_canvas.fillTriangle(points[0][0], points[0][2], points[1][0], points[1][2], points[2][0], points[2][2], _cube_colors[cc[cubelet]]);
