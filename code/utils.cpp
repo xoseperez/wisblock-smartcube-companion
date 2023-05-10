@@ -138,11 +138,18 @@ float utils_tps(uint32_t time, uint16_t turns) {
     return (float) turns / ((float) time / 1000.0);
 }
 
-void utils_time_to_text(uint32_t time, char * buffer) {
+char * utils_time_to_text(uint32_t time, char * buffer, bool zeropad) {
     uint16_t ms = time % 1000;
     time /= 1000;
     uint8_t sec = time % 60;
     time /= 60;
     uint8_t min = time;
     sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
+    if (!zeropad) {
+        for (uint8_t i=0; i<4; i++) {
+            if ((buffer[i] != '0') & (buffer[i] != ':')) break;
+            buffer[i] = ' ';
+        }
+    }
+    return buffer;
 }

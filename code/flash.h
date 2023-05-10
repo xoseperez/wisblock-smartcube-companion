@@ -21,8 +21,6 @@ struct s_user {
 
 // Users (120 * 4 + 2 = 482 bytes)
 struct s_settings {
-    uint8_t magic = FLASH_MAGIC_NUMBER;
-    uint8_t version = FLASH_VERSION;
     s_user user[4];
 };
 

@@ -55,7 +55,6 @@ void touch_process(void) {
 
         // release
         if ((_touch_state == 1) && (newstate == 0)) {
-            touch_send_event(TOUCH_EVENT_RELEASE);
             _touch_pointB.x = _touch_interface.read_touch1_x();
             _touch_pointB.y = _touch_interface.read_touch1_y();
             if (_touch_pointB.x - _touch_pointA.x > 80) {

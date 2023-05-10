@@ -13,42 +13,41 @@ File _settings_file(InternalFS);
 
 void flash_dump() {
 
-    #if DEBUG>1
+    #if DEBUG > 1
     
         Serial.println("[FLASH] Settings dump");
-        Serial.printf ("[FLASH] Version: %d\n", g_settings.version);
 
         char buffer[30] = {0};
 
         for (uint8_t user=0; user<4; user++) {
             
             // Header
-            Serial.println("[FLASH] ---------------------------------");
+            Serial.println("[FLASH] ----------------------------------");
             Serial.printf ("[FLASH] User %d\n", user+1);
-            Serial.println("[FLASH] ---------------------------------");
+            Serial.println("[FLASH] ----------------------------------");
 
             // Best
-            utils_time_to_text(g_settings.user[user].best.time, buffer);
-            Serial.printf ("[FLASH] BEST    %s            %.2f\n", buffer, g_settings.user[user].best.tps / 100.0);
+            utils_time_to_text(g_settings.user[user].best.time, buffer, false);
+            Serial.printf ("[FLASH] BEST    %s            %5.2f\n", buffer, g_settings.user[user].best.tps / 100.0);
 
             // AV5
-            utils_time_to_text(g_settings.user[user].av5.time, buffer);
-            Serial.printf ("[FLASH]  AV5    %s    %4d    %.2f\n", buffer, g_settings.user[user].av5.turns, g_settings.user[user].av5.tps / 100.0);
+            utils_time_to_text(g_settings.user[user].av5.time, buffer, false);
+            Serial.printf ("[FLASH]  AV5    %s    %4d    %5.2f\n", buffer, g_settings.user[user].av5.turns, g_settings.user[user].av5.tps / 100.0);
 
             // AV12
-            utils_time_to_text(g_settings.user[user].av12.time, buffer);
-            Serial.printf ("[FLASH] AV12    %s    %4d    %.2f\n", buffer, g_settings.user[user].av12.turns, g_settings.user[user].av12.tps / 100.0);
+            utils_time_to_text(g_settings.user[user].av12.time, buffer, false);
+            Serial.printf ("[FLASH] AV12    %s    %4d    %5.2f\n", buffer, g_settings.user[user].av12.turns, g_settings.user[user].av12.tps / 100.0);
 
             // Last 12
             for (uint8_t i=0; i<12; i++) {
-                utils_time_to_text(g_settings.user[user].solve[i].time, buffer);
-                Serial.printf ("[FLASH] %4d    %s    %4d    %.2f\n", i+1, buffer, g_settings.user[user].solve[i].turns, g_settings.user[user].solve[i].tps / 100.0);
+                utils_time_to_text(g_settings.user[user].solve[i].time, buffer, false);
+                Serial.printf ("[FLASH] %4d    %s    %4d    %5.2f\n", i+1, buffer, g_settings.user[user].solve[i].turns, g_settings.user[user].solve[i].tps / 100.0);
             }
 
 
         }
     
-        Serial.println("[FLASH] ---------------------------------");
+        Serial.println("[FLASH] ----------------------------------");
     
     #endif
 
@@ -87,6 +86,7 @@ void flash_load() {
         #endif
         flash_reset();
         _settings_file.open(_settings_file_name, FILE_O_READ);
+        _settings_file.read(markers, 2);
     }
 
     // Read data
@@ -130,6 +130,8 @@ bool flash_save() {
             return false;
         }
 
+        uint8_t markers[2] = { FLASH_MAGIC_NUMBER, FLASH_VERSION};
+        _settings_file.write(markers, 2);
         _settings_file.write((uint8_t *)&g_settings, sizeof(s_settings));
         _settings_file.flush();
         _settings_file.close();

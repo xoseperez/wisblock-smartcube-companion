@@ -8,6 +8,7 @@
 #include "bluetooth.h"
 #include "cube.h"
 #include "utils.h"
+#include "flash.h"
 #include "ring.h"
 
 #include "assets/bmp_cube.h"
@@ -291,7 +292,7 @@ void display_show_timer() {
     float tps = utils_tps(time, turns);
     char buffer[30] = {0};
 
-    utils_time_to_text(time, buffer);
+    utils_time_to_text(time, buffer, true);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(4);
     display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
@@ -313,7 +314,7 @@ void display_show_timer() {
 void display_page_intro() {
     
     display_draw_bmp(&bmp_cube_info, 20, 20);
-    _display_canvas.setTextSize(0);
+    _display_canvas.setTextSize(1);
     _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
     display_text((char *) APP_NAME, 310, 210, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
     display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
@@ -338,6 +339,58 @@ void display_page_users() {
 }
 
 void display_page_results(uint8_t user) {
+
+    uint8_t y=20;
+    uint8_t step_y=10;
+    uint8_t x=35;
+    char line[60] = {0};
+    char buffer[30] = {0};
+
+    _display_canvas.setTextSize(2);
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    snprintf(line, sizeof(line), "STATS FOR USER %d", user+1);
+    display_text(line, 100+x, y, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_TOP);
+    y+=20;
+
+    _display_canvas.setTextSize(1);
+    _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+
+    // Header
+    snprintf(line, sizeof(line), "            TIME   TURNS     TPS");
+    display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
+    snprintf(line, sizeof(line), "----- ---------- ------- -------");
+    display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
+
+    // Best
+    _display_canvas.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
+    snprintf(line, sizeof(line), "BEST   %s           %5.2f", utils_time_to_text(g_settings.user[user].best.time, buffer, false), g_settings.user[user].best.tps / 100.0);
+    display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
+
+    // AV5 & AV12
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    snprintf(line, sizeof(line), " AV5   %s           %5.2f", utils_time_to_text(g_settings.user[user].av5.time, buffer, false), g_settings.user[user].av5.tps / 100.0);
+    display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
+    snprintf(line, sizeof(line), "AV12   %s           %5.2f", utils_time_to_text(g_settings.user[user].av12.time, buffer, false), g_settings.user[user].av12.tps / 100.0);
+    display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
+
+    // Last 5
+    _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
+    for (uint8_t i=0; i<12; i++) {
+        snprintf(line, sizeof(line), "%4d   %s    %4d   %5.2f", i+1, utils_time_to_text(g_settings.user[user].solve[i].time, buffer, false), g_settings.user[user].solve[i].turns, g_settings.user[user].solve[i].tps / 100.0);
+        display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
+    }
+
+    // Show buttons
+    uint16_t margin = 10;
+    uint16_t size = (DISPLAY_HEIGHT - 5 * margin) / 4;
+    _display_canvas.setTextSize(2);
+    for (uint8_t i=0; i<4; i++) {
+        _display_canvas.fillRoundRect(DISPLAY_WIDTH - margin - size, margin + (size + margin) * i, size, size, 5, user == i ? ST77XX_GREEN : ST77XX_RED);
+        snprintf(line, sizeof(line), "%d", i+1);
+        _display_canvas.setTextColor(ST77XX_BLACK, user == i ? ST77XX_GREEN : ST77XX_RED);
+        display_text(line, DISPLAY_WIDTH - margin - size / 2 , margin + (size + margin) * i + size / 2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    }
+
 
 }
 

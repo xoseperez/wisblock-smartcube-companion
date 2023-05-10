@@ -13,10 +13,9 @@
 enum {
     STATE_SLEEPING,
     STATE_INTRO,
+    STATE_USER,
     STATE_2D,
     STATE_3D,
-    STATE_USERS,
-    STATE_RESULTS,
     STATE_SCRAMBLE,
     STATE_INSPECT,
     STATE_TIMER,
@@ -26,6 +25,7 @@ enum {
 
 unsigned char _last_state = STATE_SLEEPING;
 unsigned char _state = STATE_INTRO;
+bool _force_state = false;
 Ring _ring;
 bool _scramble_update = false;
 uint8_t _user = 0;
@@ -69,6 +69,16 @@ bool scramble_update(uint8_t move) {
 
 void touch_callback(unsigned char event) {
     
+    if (event == TOUCH_EVENT_RELEASE) {
+        if (_state == STATE_USER) {
+            TouchPointType point = touch_pointA();
+            if (point.y < 60) {
+                _user = point.x / 60;
+                _force_state = true;
+            }
+        }
+    }
+
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
 
         switch (_state) {
@@ -77,6 +87,7 @@ void touch_callback(unsigned char event) {
                 _state = STATE_SLEEPING;
                 break;
 
+            case STATE_USER:
             case STATE_2D:
             case STATE_3D:
                 _state = STATE_DISCONNECT;
@@ -100,11 +111,13 @@ void touch_callback(unsigned char event) {
 
         if (_state == STATE_3D) _state = STATE_SCRAMBLE;
         if (_state == STATE_2D) _state = STATE_3D;
+        if (_state == STATE_USER) _state = STATE_2D;
 
     }
 
     if (event == TOUCH_EVENT_SWIPE_RIGHT) {
 
+        if (_state == STATE_2D) _state = STATE_USER;
         if (_state == STATE_3D) _state = STATE_2D;
         if (_state == STATE_SCRAMBLE) _state = STATE_3D;
 
@@ -117,7 +130,7 @@ void cube_callback(unsigned char event, uint8_t * data) {
     switch (event) {
 
         case CUBE_EVENT_CONNECTED:
-            _state = STATE_2D;
+            _state = STATE_USER;
             break;
 
         case CUBE_EVENT_DISCONNECTED:
@@ -129,6 +142,7 @@ void cube_callback(unsigned char event, uint8_t * data) {
             break;
 
         case CUBE_EVENT_MOVE:
+            //if (_state == STATE_USER) _state = STATE_2D;
             if (_state == STATE_SOLVED) _state = STATE_2D;
             if (_state == STATE_INSPECT) {
                 cube_metrics_start();
@@ -218,8 +232,8 @@ void state_machine() {
     static unsigned long last_change = millis();
     bool changed_display = false;
     bool save_flash = false;
-    bool changed_state = (_last_state != _state);
-    unsigned char prev_state = _last_state;
+    bool changed_state = (_last_state != _state) || _force_state;
+    _force_state = false;
     _last_state = _state;
 
     if (changed_state) {
@@ -249,27 +263,20 @@ void state_machine() {
             break;
 
         case STATE_2D:
-            if (cube_updated() || (prev_state == STATE_3D)) {
+            if (changed_state || cube_updated()) {
                 display_page_2d();
                 changed_display = true;
             }
             break;
 
         case STATE_3D:
-            if (cube_updated() || (prev_state == STATE_2D)) {
+            if (changed_state || cube_updated()) {
                 display_page_3d();
                 changed_display = true;
             }
             break;
 
-        case STATE_USERS:
-            if (changed_state) {
-                display_page_users();
-                changed_display = true;
-            }
-            break;
-
-        case STATE_RESULTS:
+        case STATE_USER:
             if (changed_state) {
                 display_page_results(_user);
                 changed_display = true;
@@ -303,14 +310,18 @@ void state_machine() {
         case STATE_SOLVED:
             if (changed_state) {
 
-                // Save result to flash
                 unsigned long time = cube_time();
                 unsigned short turns = cube_turns();
-                add_solve(_user, time, turns);
-                save_flash = true;
+                if (time == 0) {
+                    _state = STATE_2D;
+                } else {
 
-                display_page_solved();
-                changed_display = true;
+                    add_solve(_user, time, turns);
+                    save_flash = true;
+
+                    display_page_solved();
+                    changed_display = true;
+                }
 
             }
             break;
