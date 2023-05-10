@@ -173,7 +173,7 @@ bool giiker_start(uint16_t conn_handle) {
      // Discover Giiker data service (only one supported right now)
     if ( !_giiker_service_data.discover(conn_handle) ) {
         #if DEBUG > 0
-            Serial.println("[GII] GIIKER data service not found. Disconnecting.");
+            Serial.println("[GII] GIIKER data service not found. Skipping.");
         #endif
         return false;
     }
@@ -184,7 +184,7 @@ bool giiker_start(uint16_t conn_handle) {
     // Discover Giiker data characteristic
     if ( ! _giiker_characteristic_data.discover() ) {
         #if DEBUG > 0
-            Serial.println("[GII] GIIKER data characteristic not found. Disconnecting.");
+            Serial.println("[GII] GIIKER data characteristic not found. Skipping.");
         #endif
         return false;
     }
@@ -198,7 +198,7 @@ bool giiker_start(uint16_t conn_handle) {
     // Discover Giiker rw service (only one supported right now)
     if ( !_giiker_service_rw.discover(conn_handle) ) {
         #if DEBUG > 0
-            Serial.println("[GII] GIIKER rw service not found. Disconnecting.");
+            Serial.println("[GII] GIIKER rw service not found. Skipping.");
         #endif
         return true;
     }

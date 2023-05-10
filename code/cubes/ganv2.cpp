@@ -196,7 +196,7 @@ bool ganv2_start(uint16_t conn_handle) {
      // Discover GAN v2 data service (only one supported right now)
     if ( !_ganv2_service_data.discover(conn_handle) ) {
         #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 data service not found. Disconnecting.");
+            Serial.println("[GAN] GAN v2 data service not found. Skipping.");
         #endif
         return false;
     }
@@ -207,7 +207,7 @@ bool ganv2_start(uint16_t conn_handle) {
     // Discover GAN v2 write characteristic
     if ( ! _ganv2_characteristic_write.discover() ) {
         #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 write characteristic not found. Disconnecting.");
+            Serial.println("[GAN] GAN v2 write characteristic not found. Skipping.");
         #endif
         return false;
     }
@@ -218,7 +218,7 @@ bool ganv2_start(uint16_t conn_handle) {
     // Discover GAN v2 read characteristic
     if ( ! _ganv2_characteristic_read.discover() ) {
         #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 read characteristic not found. Disconnecting.");
+            Serial.println("[GAN] GAN v2 read characteristic not found. Skipping.");
         #endif
         return false;
     }
