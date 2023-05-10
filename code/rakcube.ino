@@ -148,10 +148,12 @@ void cube_callback(unsigned char event, uint8_t * data) {
     switch (event) {
 
         case CUBE_EVENT_CONNECTED:
+            utils_beep();
             _state = STATE_USER;
             break;
 
         case CUBE_EVENT_DISCONNECTED:
+            utils_beep();
             _state = STATE_INTRO;
             break;
 
@@ -164,6 +166,7 @@ void cube_callback(unsigned char event, uint8_t * data) {
             if (_state == STATE_SOLVED) _state = STATE_2D;
             if (_state == STATE_INSPECT) {
                 cube_metrics_start();
+                utils_beep();
                 _state = STATE_TIMER;
             }
             if (_state == STATE_SCRAMBLE) {
@@ -176,6 +179,7 @@ void cube_callback(unsigned char event, uint8_t * data) {
         case CUBE_EVENT_SOLVED:
             if (_state == STATE_TIMER) {
                 cube_metrics_end();
+                utils_beep();
                 _state = STATE_SOLVED;
             }
             break;

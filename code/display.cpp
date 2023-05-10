@@ -461,11 +461,11 @@ void display_page_solved() {
 
 void display_off() {
     digitalWrite(DISPLAY_BL_GPIO, LOW);
-    digitalWrite(WB_IO2, LOW);
+    digitalWrite(DISPLAY_EN_GPIO, LOW);
 }
 
 void display_on() {
-    digitalWrite(WB_IO2, HIGH);
+    digitalWrite(DISPLAY_EN_GPIO, HIGH);
     digitalWrite(DISPLAY_BL_GPIO, HIGH);
 }
 
@@ -483,7 +483,7 @@ void display_end_transaction() {
 
 void display_setup(void) {
   
-    pinMode(WB_IO2, OUTPUT);
+    pinMode(DISPLAY_EN_GPIO, OUTPUT);
     pinMode(DISPLAY_BL_GPIO, OUTPUT);
 
     display_on();

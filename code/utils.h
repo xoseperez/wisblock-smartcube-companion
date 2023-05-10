@@ -2,6 +2,8 @@
 #define _UTILS_H
 
 void utils_setup();
+void utils_beep();
+void utils_delay(uint32_t ms);
 
 void sleep();
 

@@ -24,6 +24,7 @@ void wdt_feed() {
 }
 
 void utils_setup() {
+    pinMode(BUZZER_PIN, OUTPUT);
     pinMode(BAT_MEASUREMENT_GPIO, INPUT);
     analogReference(AR_INTERNAL_3_0);
     analogReadResolution(12);
@@ -37,6 +38,17 @@ unsigned char utils_get_battery() {
     #endif
     mv = constrain(mv, BATT_MIN_MV, BATT_MAX_MV);
     return map(mv, BATT_MIN_MV, BATT_MAX_MV, 0, 100);
+}
+
+void utils_delay(uint32_t ms) {
+    uint32_t start = millis();
+    while (millis() - start < ms) delay(1);
+}
+
+void utils_beep() {
+    tone(BUZZER_PIN, BUZZER_FREQ);
+    utils_delay(BUZZER_DURATION);
+    noTone(BUZZER_PIN);
 }
 
 void sleep() {
