@@ -14,6 +14,7 @@ enum {
     STATE_SLEEPING,
     STATE_INTRO,
     STATE_USER,
+    STATE_USER_CONFIRM_RESET,
     STATE_2D,
     STATE_3D,
     STATE_SCRAMBLE,
@@ -28,7 +29,8 @@ unsigned char _state = STATE_INTRO;
 bool _force_state = false;
 Ring _ring;
 bool _scramble_update = false;
-uint8_t _user = 0;
+
+uint8_t g_user = 0;
 s_settings g_settings;
 
 bool scramble_update(uint8_t move) {
@@ -70,13 +72,29 @@ bool scramble_update(uint8_t move) {
 void touch_callback(unsigned char event) {
     
     if (event == TOUCH_EVENT_RELEASE) {
+        
         if (_state == STATE_USER) {
             TouchPointType point = touch_pointA();
             if (point.y < 60) {
-                _user = point.x / 60;
+                g_user = point.x / 60;
                 _force_state = true;
             }
         }
+
+        if (_state == STATE_USER_CONFIRM_RESET) {
+            TouchPointType point = touch_pointA();
+            if ((120 < point.x) & (point.x < 160)) {
+                if (point.y > 160) {
+                    reset_user(g_user);
+                }
+            }
+            _state = STATE_USER;
+        }
+
+    }
+
+    if (event == TOUCH_EVENT_LONG_CLICK) {
+        if (_state == STATE_USER) _state = STATE_USER_CONFIRM_RESET;
     }
 
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
@@ -166,6 +184,30 @@ void cube_callback(unsigned char event, uint8_t * data) {
 
 }
 
+void reset_user(uint8_t user) {
+
+    g_settings.user[user].best.time = 0;
+    g_settings.user[user].best.turns = 0;
+    g_settings.user[user].best.tps = 0;
+
+    g_settings.user[user].av5.time = 0;
+    g_settings.user[user].av5.turns = 0;
+    g_settings.user[user].av5.tps = 0;
+    
+    g_settings.user[user].av12.time = 0;
+    g_settings.user[user].av12.turns = 0;
+    g_settings.user[user].av12.tps = 0;
+    
+    for (uint8_t i=0; i<12; i++) {
+        g_settings.user[user].solve[i].time = 0;
+        g_settings.user[user].solve[i].turns = 0;
+        g_settings.user[user].solve[i].tps = 0;
+    }
+
+    flash_save();
+
+}
+
 void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
 
     bool has_avg5 = true;
@@ -248,6 +290,8 @@ void state_machine() {
     switch (_state) {
 
         case STATE_SLEEPING:
+            bluetooth_disconnect();
+            delay(10);
             sleep();
             _state = STATE_INTRO;
             break;
@@ -278,7 +322,14 @@ void state_machine() {
 
         case STATE_USER:
             if (changed_state) {
-                display_page_results(_user);
+                display_page_user(g_user);
+                changed_display = true;
+            }
+            break;
+
+        case STATE_USER_CONFIRM_RESET:
+            if (changed_state) {
+                display_page_user_confirm_reset(g_user);
                 changed_display = true;
             }
             break;
@@ -316,7 +367,7 @@ void state_machine() {
                     _state = STATE_2D;
                 } else {
 
-                    add_solve(_user, time, turns);
+                    add_solve(g_user, time, turns);
                     save_flash = true;
 
                     display_page_solved();

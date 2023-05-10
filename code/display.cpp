@@ -251,16 +251,18 @@ void display_text(char * text, uint16_t x, uint16_t y, uint8_t align) {
 
 }
 
-void display_user() {
-
-
-}
+void display_stats() {
     
-void display_battery() {
-    
+    uint8_t y=0;
     uint8_t battery;
     char buffer[10] = {0};
     
+    _display_canvas.setTextSize(1);
+
+    sprintf(buffer, "USER %d", g_user+1);
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    display_text(buffer, 310, y+=10, DISPLAY_ALIGN_RIGHT);
+
     battery = utils_get_battery();
     sprintf(buffer, "BAT %02d%%", battery);
     if (battery > 25) {
@@ -268,8 +270,7 @@ void display_battery() {
     } else {
         _display_canvas.setTextColor(ST77XX_RED, ST77XX_BLACK);
     }
-    _display_canvas.setTextSize(1);
-    display_text(buffer, 310, 10, DISPLAY_ALIGN_RIGHT);
+    display_text(buffer, 310, y+=10, DISPLAY_ALIGN_RIGHT);
 
     battery = cube_get_battery();
     if (battery != 0xFF) {
@@ -279,8 +280,7 @@ void display_battery() {
         } else {
             _display_canvas.setTextColor(ST77XX_RED, ST77XX_BLACK);
         }
-        _display_canvas.setTextSize(1);
-        display_text(buffer, 310, 20, DISPLAY_ALIGN_RIGHT);
+        display_text(buffer, 310, y+=10, DISPLAY_ALIGN_RIGHT);
     }
 
 }
@@ -320,25 +320,21 @@ void display_page_intro() {
     display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     display_text((char *) "Connect cube...", 310, 230, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
-    display_battery();
+    display_stats();
 
 }
 
 void display_page_2d() {
     display_update_cube();
-    display_battery();
+    display_stats();
 }
 
 void display_page_3d() {
     display_update_cube_3d();
-    display_battery();
+    display_stats();
 }
 
-void display_page_users() {
-
-}
-
-void display_page_results(uint8_t user) {
+void display_page_user(uint8_t user) {
 
     uint8_t y=20;
     uint8_t step_y=10;
@@ -394,13 +390,36 @@ void display_page_results(uint8_t user) {
 
 }
 
+void display_page_user_confirm_reset(uint8_t user) {
+
+    char line[60] = {0};
+
+    // Question
+    _display_canvas.setTextSize(2);
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    snprintf(line, sizeof(line), "RESET STATS FOR USER %d?", user+1);
+    display_text(line, 160, 80, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    uint8_t button_width = 100;
+    uint8_t button_height = 40;
+    uint8_t button_separation = 20;
+
+    // Button YES
+    _display_canvas.fillRoundRect((DISPLAY_WIDTH - button_separation) / 2 - button_width, 120, button_width, button_height, 5, ST77XX_RED);
+    _display_canvas.setTextColor(ST77XX_BLACK, ST77XX_RED);
+    display_text((char *) "YES", (DISPLAY_WIDTH - button_separation - button_width) / 2, 120+button_height/2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    // Button NO
+    _display_canvas.fillRoundRect((DISPLAY_WIDTH + button_separation)/2, 120, button_width, button_height, 5, ST77XX_GREEN);
+    _display_canvas.setTextColor(ST77XX_BLACK, ST77XX_GREEN);
+    display_text((char *) "NO", (DISPLAY_WIDTH + button_separation + button_width) / 2, 120+button_height/2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+}
+
 void display_page_scramble(Ring * ring) {
 
-    display_battery();
     char buffer[20];
 
-    
-  
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
 
     _display_canvas.setTextSize(2);
@@ -415,27 +434,27 @@ void display_page_scramble(Ring * ring) {
     sprintf(buffer, "%d TURNS TO GO", ring->available());
     display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
+    display_stats();
 
 }
 
 void display_page_inspect() {
-    display_battery();
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(6);
     display_text((char *) "INSPECT", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     _display_canvas.setTextSize(1);
     display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+30, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    display_stats();
 }
 
 void display_page_timer() {
-    display_battery();
-    //display_update_cube(4*6+20, 4*4.5+20, 4);
     display_show_timer();
+    display_stats();
 }
 
 void display_page_solved() {
-    display_battery();
     display_show_timer();
+    display_stats();
 }
 
 // ----------------------------------------------------------------------------

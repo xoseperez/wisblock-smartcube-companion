@@ -65,6 +65,8 @@ void touch_process(void) {
                 touch_send_event(TOUCH_EVENT_SWIPE_LEFT);
             } else if (_touch_pointA.y - _touch_pointB.y > 60) {
                 touch_send_event(TOUCH_EVENT_SWIPE_RIGHT);
+            } else if ((millis() - _touch_event_start) > 1000) {
+                touch_send_event(TOUCH_EVENT_LONG_CLICK);
             } else {
                 touch_send_event(TOUCH_EVENT_RELEASE);
             }
