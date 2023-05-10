@@ -133,3 +133,16 @@ uint16_t utils_get_bits(uint8_t * data, uint16_t position, uint8_t len) {
     }
     return value;
 }
+
+float utils_tps(uint32_t time, uint16_t turns) {
+    return (float) turns / ((float) time / 1000.0);
+}
+
+void utils_time_to_text(uint32_t time, char * buffer) {
+    uint16_t ms = time % 1000;
+    time /= 1000;
+    uint8_t sec = time % 60;
+    time /= 60;
+    uint8_t min = time;
+    sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
+}

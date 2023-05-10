@@ -35,7 +35,6 @@ uint16_t _cube_colors[6] = {
     _display_screen.color565(  0,   0, 255)
 };
 
-
 // ----------------------------------------------------------------------------
 // Private
 // ----------------------------------------------------------------------------
@@ -251,6 +250,11 @@ void display_text(char * text, uint16_t x, uint16_t y, uint8_t align) {
 
 }
 
+void display_user() {
+
+
+}
+    
 void display_battery() {
     
     uint8_t battery;
@@ -284,18 +288,10 @@ void display_show_timer() {
 
     unsigned long time = cube_time();
     unsigned short turns = cube_turns();
-    float tps = turns / ( time / 1000.0 );
+    float tps = utils_tps(time, turns);
     char buffer[30] = {0};
 
-    unsigned long tmp = time;
-    uint16_t ms = tmp % 1000;
-    tmp /= 1000;
-    uint8_t sec = tmp % 60;
-    tmp /= 60;
-    uint8_t min = tmp;
-    sprintf(buffer, "%02d:%02d.%03d", min, sec, ms);
-
-
+    utils_time_to_text(time, buffer);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(4);
     display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
@@ -303,7 +299,7 @@ void display_show_timer() {
     if (cube_running_metrics()) {
         sprintf(buffer, "TURNS %d", turns);
     } else {
-        sprintf(buffer, "TURNS %d | TPS %2.1f", turns, tps);
+        sprintf(buffer, "TURNS %d | TPS %.2f", turns, tps);
     }
     _display_canvas.setTextSize(1);
     display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
@@ -335,6 +331,14 @@ void display_page_2d() {
 void display_page_3d() {
     display_update_cube_3d();
     display_battery();
+}
+
+void display_page_users() {
+
+}
+
+void display_page_results(uint8_t user) {
+
 }
 
 void display_page_scramble(Ring * ring) {
