@@ -105,7 +105,7 @@ void cube_scramble(Ring * moves, uint8_t size) {
                 last_group_count++;
             } else {
                 last_group = face % 3;
-                last_group_count = 0;
+                last_group_count = 1;
             }
         
         } while (last_group_count<3);
