@@ -108,14 +108,14 @@ void cube_scramble(Ring * moves, uint8_t size) {
                 last_group_count = 1;
             }
         
-        } while (last_group_count<3);
+        } while (last_group_count>2);
         last_face = face;
 
         uint8_t count = random(1, 4);
         uint8_t move = (count << 4) + (face & 0x0F);
         #if DEBUG>0
             Serial.print(cube_turn_text(move));
-            Serial .print(" ");
+            Serial.print(" ");
         #endif
         moves->append(move);
 
