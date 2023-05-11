@@ -364,9 +364,9 @@ void display_page_user(uint8_t user) {
 
     // AV5 & AV12
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    snprintf(line, sizeof(line), " AV5   %s           %5.2f", utils_time_to_text(g_settings.user[user].av5.time, buffer, false), g_settings.user[user].av5.tps / 100.0);
+    snprintf(line, sizeof(line), " AV5   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].av5.time, buffer, false), g_settings.user[user].av5.turns, g_settings.user[user].av5.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
-    snprintf(line, sizeof(line), "AV12   %s           %5.2f", utils_time_to_text(g_settings.user[user].av12.time, buffer, false), g_settings.user[user].av12.tps / 100.0);
+    snprintf(line, sizeof(line), "AV12   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].av12.time, buffer, false), g_settings.user[user].av12.turns, g_settings.user[user].av12.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
     // Last 5
