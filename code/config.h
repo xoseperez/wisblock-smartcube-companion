@@ -20,7 +20,7 @@
 #define BLE_TX_POWER                -16
 #define BLE_NAME                    APP_NAME
 #define BLE_RSSI_FILTER             -45
-#define BLE_TIMEOUT                 1000
+#define BLE_TIMEOUT                 100
 
 // ----------------------------------------------------------------------------
 // Display

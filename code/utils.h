@@ -5,7 +5,8 @@ void utils_setup();
 void utils_beep();
 void utils_delay(uint32_t ms);
 
-void sleep();
+void utils_sleep();
+bool utils_sleeping();
 
 char * utils_device_name();
 unsigned char utils_get_battery();

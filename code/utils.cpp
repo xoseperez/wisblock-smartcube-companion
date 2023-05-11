@@ -51,11 +51,16 @@ void utils_beep() {
     noTone(BUZZER_PIN);
 }
 
-void sleep() {
+bool utils_sleeping() {
+    return _utils_sleeping;
+}
+
+void utils_sleep() {
 
     _utils_sleeping = true;
 
     display_off();
+    bluetooth_disconnect();
     bluetooth_scan(false);
 
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);

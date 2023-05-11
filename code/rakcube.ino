@@ -294,9 +294,7 @@ void state_machine() {
     switch (_state) {
 
         case STATE_SLEEPING:
-            bluetooth_disconnect();
-            delay(10);
-            sleep();
+            utils_sleep();
             _state = STATE_INTRO;
             break;
 

@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "bluetooth.h"
+#include "utils.h"
 #include "cube.h"
 
 #define MACS_MAX 20
@@ -103,9 +104,15 @@ void bluetooth_scan_callback(ble_gap_evt_adv_report_t* report) {
 void bluetooth_connect_callback(uint16_t conn_handle) {
     
     _bluetooth_handle = conn_handle;
+    BLEConnection* connection = Bluefruit.Connection(conn_handle);
+
+    // Check if sleeping
+    if (utils_sleeping()) {
+        connection->disconnect();
+        return;
+    }
 
     // Get the reference to current connection
-    BLEConnection* connection = Bluefruit.Connection(conn_handle);
     connection->getPeerName(_bluetooth_peer_name, sizeof(_bluetooth_peer_name));
     ble_gap_addr_t ble_addr = connection->getPeerAddr();
     _bluetooth_peer_addr[0] = ble_addr.addr[5];
@@ -143,7 +150,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     #endif
 
     cube_unbind();
-    bluetooth_scan(true);
+    if (!utils_sleeping()) bluetooth_scan(true);
 
 }
 
