@@ -172,7 +172,12 @@ void ganv2_data_send(uint8_t* data, uint16_t len) {
 void ganv2_data_send(uint8_t opcode) {
     uint8_t data[20];
     data[0] = opcode;
-    ganv2_data_send(data, 20);
+    ganv2_data_send(data, sizeof(data));
+}
+
+void ganv2_reset() {
+    uint8_t data[20] = {10, 5, 57, 119, 0, 0, 1, 35, 69, 103, 137, 171, 0, 0, 0, 0, 0, 0, 0, 0};
+    ganv2_data_send(data, sizeof(data));
 }
 
 // ----------------------------------------------------------------------------

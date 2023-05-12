@@ -6,6 +6,7 @@
 #define GANV2_GET_BATTERY 9
 
 void ganv2_init();
+void ganv2_reset();
 bool ganv2_start(uint16_t conn_handle);
 
 // privates
