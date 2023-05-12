@@ -217,7 +217,11 @@ void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
     bool has_avg5 = true;
     bool has_avg12 = true;
     uint32_t time_sum5 = time;
+    uint32_t time_sum5_min = time;
+    uint32_t time_sum5_max = time;
     uint32_t time_sum12 = time;
+    uint32_t time_sum12_min = time;
+    uint32_t time_sum12_max = time;
     uint32_t turns_sum5 = turns;
     uint32_t turns_sum12 = turns;
     uint16_t tps = 100 * utils_tps(time, turns);
@@ -225,9 +229,13 @@ void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
     // Move solves
     for (int8_t i=10; i>=0; i--) {
         if (g_settings.user[user].solve[i].time > 0) {
+            if (time_sum12_min > g_settings.user[user].solve[i].time) time_sum12_min = g_settings.user[user].solve[i].time;
+            if (time_sum12_max < g_settings.user[user].solve[i].time) time_sum12_max = g_settings.user[user].solve[i].time;
             time_sum12 += g_settings.user[user].solve[i].time;
             turns_sum12 += g_settings.user[user].solve[i].turns;
             if (i<4) {
+                if (time_sum5_min > g_settings.user[user].solve[i].time) time_sum5_min = g_settings.user[user].solve[i].time;
+                if (time_sum5_max < g_settings.user[user].solve[i].time) time_sum5_max = g_settings.user[user].solve[i].time;
                 time_sum5 += g_settings.user[user].solve[i].time;
                 turns_sum5 += g_settings.user[user].solve[i].turns;
             }
@@ -258,14 +266,14 @@ void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
 
     // Save av5
     if (has_avg5) {
-        g_settings.user[user].av5.time = time_sum5 / 5;
+        g_settings.user[user].av5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
         g_settings.user[user].av5.turns = turns_sum5 / 5;
         g_settings.user[user].av5.tps = 100 * utils_tps(time_sum5, turns_sum5);
     }
 
     // Save av12
     if (has_avg12) {
-        g_settings.user[user].av12.time = time_sum12 / 12;
+        g_settings.user[user].av12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
         g_settings.user[user].av12.turns = turns_sum12 / 12;
         g_settings.user[user].av12.tps = 100 * utils_tps(time_sum12, turns_sum12);
     }
