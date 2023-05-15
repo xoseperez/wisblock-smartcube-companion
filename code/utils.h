@@ -1,8 +1,10 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include "config.h"
+
 void utils_setup();
-void utils_beep();
+void utils_beep(unsigned short freq = BUZZER_FREQ_OK, unsigned long ms = BUZZER_DURATION);
 void utils_delay(uint32_t ms);
 
 void utils_sleep();

@@ -45,9 +45,9 @@ void utils_delay(uint32_t ms) {
     while (millis() - start < ms) delay(1);
 }
 
-void utils_beep() {
-    tone(BUZZER_PIN, BUZZER_FREQ);
-    utils_delay(BUZZER_DURATION);
+void utils_beep(unsigned short freq, unsigned long ms) {
+    tone(BUZZER_PIN, freq);
+    utils_delay(ms);
     noTone(BUZZER_PIN);
 }
 

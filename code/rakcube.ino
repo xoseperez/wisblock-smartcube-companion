@@ -44,6 +44,7 @@ bool scramble_update(uint8_t move) {
     // cannot be summed (different face)
     if (sum == 0xFF) {
         response = _ring.prepend(reverse);
+        utils_beep(BUZZER_FREQ_ERROR, BUZZER_DURATION * 3);
         if (response == -1) return false;
     
     // cancels the first movement
