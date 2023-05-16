@@ -178,6 +178,9 @@ void touch_callback(unsigned char event) {
     }
 
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
+        if (g_state == STATE_SCRAMBLE) g_state = STATE_USER;
+        if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
+        if (g_state == STATE_INSPECT) g_state = STATE_USER;
         if (g_state == STATE_TIMER) g_state = STATE_USER;
     }
 
@@ -191,6 +194,7 @@ void touch_callback(unsigned char event) {
             if (g_state == STATE_USER) g_state = STATE_SCRAMBLE_MANUAL;
         }
         if (g_state == STATE_CONFIG) g_state = STATE_USER;
+        if (g_state == STATE_SOLVED) g_state = STATE_USER;
 
     }
 
@@ -204,6 +208,7 @@ void touch_callback(unsigned char event) {
         } else {
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
         }
+        if (g_state == STATE_INSPECT) g_state = STATE_USER;
 
     }
 
@@ -267,7 +272,8 @@ void cube_callback(unsigned char event, uint8_t * data) {
             break;
 
         case CUBE_EVENT_4UTURNS:
-            if ((g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_INSPECT;
+            if (g_state == STATE_SCRAMBLE) g_state = STATE_INSPECT;
+            if ((g_state == STATE_USER) || (g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_SCRAMBLE;
             break;
 
         case CUBE_EVENT_MOVE:
@@ -439,7 +445,8 @@ void state_machine() {
                 display_page_smartcube_connect();
                 changed_display = true;
             }
-            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+            if (millis() - last_change > CONNECT_TIMEOUT) {
+                bluetooth_scan(false);
                 g_state = STATE_CONFIG;
             }
             break;
@@ -454,7 +461,7 @@ void state_machine() {
                 g_mode = MODE_STACKMAT;
                 g_state = STATE_USER;
             }
-            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+            if (millis() - last_change > CONNECT_TIMEOUT) {
                 g_state = STATE_CONFIG;
             }
             break;

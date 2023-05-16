@@ -248,7 +248,6 @@ void cube_move(uint8_t face, uint8_t count) {
     }
     if (uturns == 4) {
         uturns = 0;
-        uturns = 2;
         if (_cube_callback) _cube_callback(CUBE_EVENT_4UTURNS, nullptr);
     }
 

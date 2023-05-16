@@ -50,7 +50,7 @@ static void display_draw_bmp(const GUI_BITMAP *bmp, uint16_t x, uint16_t y, uint
             _display_canvas.drawPixel(x+i, y+j, bmp->date[index]);
             index += step;
         }
-        index += (w * (step - 1));
+        index += (bmp->xSize * (step - 1));
     }
 }
 

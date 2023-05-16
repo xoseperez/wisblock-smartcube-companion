@@ -9,6 +9,7 @@
 #define APP_SHORT_NAME              "TIMER"
 #define APP_VERSION                 "v0.7.0"
 #define SHUTDOWN_TIMEOUT            60000
+#define CONNECT_TIMEOUT             20000    
 #define INTRO_TIMEOUT               2000
 #define WDT_SECONDS                 30
 #define SCRAMBLE_SIZE               21
