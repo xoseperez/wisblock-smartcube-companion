@@ -13,16 +13,6 @@
 
 #include "assets/bmp_cube.h"
 
-#define DISPLAY_ALIGN_LEFT      0
-#define DISPLAY_ALIGN_CENTER    1
-#define DISPLAY_ALIGN_RIGHT     2
-#define DISPLAY_ALIGN_TOP       0
-#define DISPLAY_ALIGN_MIDDLE    4
-#define DISPLAY_ALIGN_BOTTOM    8
-
-#define DISPLAY_WIDTH           320
-#define DISPLAY_HEIGHT          240
-
 Adafruit_ST7789 _display_screen = Adafruit_ST7789(DISPLAY_CS_GPIO, DISPLAY_DC_GPIO, DISPLAY_RST_GPIO);
 GFXcanvas16 _display_canvas = GFXcanvas16(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -36,14 +26,31 @@ uint16_t _cube_colors[6] = {
     _display_screen.color565(  0,   0, 255)
 };
 
+s_button _display_buttons[10];
+uint8_t _display_buttons_count = 0;
+
+const char * DISPLAY_CONFIG_BUTTONS[] = {
+    "SMARTCUBE",
+    "STACKMAT",
+    "MANUAL",
+    "SHUT DOWN"
+};
+
+
 // ----------------------------------------------------------------------------
 // Private
 // ----------------------------------------------------------------------------
 
-static void display_draw_bmp(const GUI_BITMAP *bmp, uint8_t x, uint8_t y) {
+static void display_draw_bmp(const GUI_BITMAP *bmp, uint16_t x, uint16_t y, uint8_t step) {
     uint32_t index = 0;
-    for (uint16_t j=0; j<bmp->ySize; j++) for (uint16_t i=0; i<bmp->xSize; i++) {
-        _display_canvas.drawPixel(x+i, y+j, bmp->date[index++]);
+    uint16_t w = bmp->xSize / step;
+    uint16_t h = bmp->ySize / step;
+    for (uint16_t j=0; j<h; j++) {
+        for (uint16_t i=0; i<w; i++) {
+            _display_canvas.drawPixel(x+i, y+j, bmp->date[index]);
+            index += step;
+        }
+        index += (w * (step - 1));
     }
 }
 
@@ -232,7 +239,21 @@ void display_update_cube(uint16_t center_x, uint16_t center_y, unsigned char siz
 
 }
 
-void display_text(char * text, uint16_t x, uint16_t y, uint8_t align) {
+uint16_t display_text_width(char * text) {
+    int16_t a, b;
+    uint16_t w, h;
+    _display_canvas.getTextBounds(text, 0, 0, &a, &b, &w, &h);
+    return w;
+}
+
+uint16_t display_text_height(char * text) {
+    int16_t a, b;
+    uint16_t w, h;
+    _display_canvas.getTextBounds(text, 0, 0, &a, &b, &w, &h);
+    return h;
+}
+
+uint16_t display_text(char * text, uint16_t x, uint16_t y, uint8_t align, bool return_x) {
 
     // Get text dimensions
     int16_t a, b;
@@ -249,6 +270,12 @@ void display_text(char * text, uint16_t x, uint16_t y, uint8_t align) {
     _display_canvas.setCursor(x, y);
     _display_canvas.println(text);    
 
+    if (return_x) {
+        return x + w;
+    } else {
+        return y + h;
+    }
+
 }
 
 void display_stats() {
@@ -262,6 +289,11 @@ void display_stats() {
     sprintf(buffer, "USER %d", g_user+1);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     display_text(buffer, 310, y+=10, DISPLAY_ALIGN_RIGHT);
+
+    if (g_mode < 3) {
+        _display_canvas.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
+        display_text((char *) DISPLAY_CONFIG_BUTTONS[g_mode], 310, y+=10, DISPLAY_ALIGN_RIGHT);
+    }
 
     battery = utils_get_battery();
     sprintf(buffer, "BAT %02d%%", battery);
@@ -297,14 +329,54 @@ void display_show_timer() {
     _display_canvas.setTextSize(4);
     display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
      
-    if (cube_running_metrics()) {
-        sprintf(buffer, "TURNS %d", turns);
-    } else {
-        sprintf(buffer, "TURNS %d | TPS %.2f", turns, tps);
+    if (g_mode == 0) {
+        if (cube_running_metrics()) {
+            sprintf(buffer, "TURNS %d", turns);
+        } else {
+            sprintf(buffer, "TURNS %d | TPS %.2f", turns, tps);
+        }
+        _display_canvas.setTextSize(1);
+        display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     }
-    _display_canvas.setTextSize(1);
-    display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
+}
+
+// ----------------------------------------------------------------------------
+// Buttons
+// ----------------------------------------------------------------------------
+
+void display_clear_buttons() {
+    _display_buttons_count = 0;
+}
+
+void display_button(uint8_t id, char * text, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t buttoncolor, uint32_t textcolor) {
+
+    // Draw button
+    _display_canvas.fillRoundRect(x, y, w, h, 5, buttoncolor);
+    _display_canvas.setTextColor(textcolor, buttoncolor);
+    display_text(text, x + w / 2, y + h / 2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    // Register button
+    if (_display_buttons_count<10) {
+        _display_buttons[_display_buttons_count].id = id;
+        _display_buttons[_display_buttons_count].x1 = x;
+        _display_buttons[_display_buttons_count].y1 = y;
+        _display_buttons[_display_buttons_count].x2 = x+w;
+        _display_buttons[_display_buttons_count].y2 = y+h;
+        _display_buttons_count++;
+    }
+
+}
+
+uint8_t display_get_button(uint16_t x, uint16_t y) {
+    for (uint8_t i=0; i<_display_buttons_count; i++) {
+        if ((_display_buttons[i].x1 <= x) && (x <= _display_buttons[i].x2)) {
+            if ((_display_buttons[i].y1 <= y) && (y <= _display_buttons[i].y2)) {
+                return i;
+            }
+        }
+    }
+    return 0xFF;
 }
 
 // ----------------------------------------------------------------------------
@@ -313,14 +385,49 @@ void display_show_timer() {
 
 void display_page_intro() {
     
-    display_draw_bmp(&bmp_cube_info, 20, 20);
+    display_draw_bmp(&bmp_cube_info, 20, 20, 1);
     _display_canvas.setTextSize(1);
     _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
     display_text((char *) APP_NAME, 310, 210, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
     display_text((char *) APP_VERSION, 310, 220, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    display_text((char *) "Connect cube...", 310, 230, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
     display_stats();
+
+}
+
+void display_page_config(uint8_t mode) {
+
+    uint16_t margin = 10;
+    uint16_t height = (DISPLAY_HEIGHT - 5 * margin) / 4;
+
+    display_clear_buttons();
+    _display_canvas.setTextSize(2);
+    for (uint8_t i=0; i<4; i++) {
+        display_button(i, (char *) DISPLAY_CONFIG_BUTTONS[i], margin, margin + (height + margin) * i, DISPLAY_WIDTH - 2 * margin, height, mode == i ? ST77XX_GREEN : ST77XX_RED);
+    }
+
+}
+
+void display_page_smartcube_connect() {
+    
+    display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 2);
+
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextSize(2);
+    display_text((char *) "PAIRING...", 160, 40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    _display_canvas.setTextSize(1);
+    display_text((char *) "Bring the cube closer", 160, 200, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+}
+
+void display_page_stackmat_connect() {
+    
+    display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 2);
+
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextSize(2);
+    display_text((char *) "LISTENING...", 160, 40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    _display_canvas.setTextSize(1);
+    display_text((char *) "Connect and turn on the StackMat", 160, 200, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
 }
 
@@ -380,11 +487,10 @@ void display_page_user(uint8_t user) {
     uint16_t margin = 10;
     uint16_t size = (DISPLAY_HEIGHT - 5 * margin) / 4;
     _display_canvas.setTextSize(2);
+    display_clear_buttons();
     for (uint8_t i=0; i<4; i++) {
-        _display_canvas.fillRoundRect(DISPLAY_WIDTH - margin - size, margin + (size + margin) * i, size, size, 5, user == i ? ST77XX_GREEN : ST77XX_RED);
         snprintf(line, sizeof(line), "%d", i+1);
-        _display_canvas.setTextColor(ST77XX_BLACK, user == i ? ST77XX_GREEN : ST77XX_RED);
-        display_text(line, DISPLAY_WIDTH - margin - size / 2 , margin + (size + margin) * i + size / 2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+        display_button(i, line, DISPLAY_WIDTH - margin - size, margin + (size + margin) * i, size, size, user == i ? ST77XX_GREEN : ST77XX_RED);
     }
 
 
@@ -404,15 +510,10 @@ void display_page_user_confirm_reset(uint8_t user) {
     uint8_t button_height = 40;
     uint8_t button_separation = 20;
 
-    // Button YES
-    _display_canvas.fillRoundRect((DISPLAY_WIDTH - button_separation) / 2 - button_width, 120, button_width, button_height, 5, ST77XX_RED);
-    _display_canvas.setTextColor(ST77XX_BLACK, ST77XX_RED);
-    display_text((char *) "YES", (DISPLAY_WIDTH - button_separation - button_width) / 2, 120+button_height/2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
-
-    // Button NO
-    _display_canvas.fillRoundRect((DISPLAY_WIDTH + button_separation)/2, 120, button_width, button_height, 5, ST77XX_GREEN);
-    _display_canvas.setTextColor(ST77XX_BLACK, ST77XX_GREEN);
-    display_text((char *) "NO", (DISPLAY_WIDTH + button_separation + button_width) / 2, 120+button_height/2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    // Buttons
+    display_clear_buttons();
+    display_button(0, (char *) "YES", (DISPLAY_WIDTH - button_separation) / 2 - button_width, 120, button_width, button_height, ST77XX_RED);
+    display_button(1, (char *) "NO", (DISPLAY_WIDTH + button_separation) / 2, 120, button_width, button_height, ST77XX_GREEN);
 
 }
 
@@ -438,6 +539,44 @@ void display_page_scramble(Ring * ring) {
 
 }
 
+void display_page_scramble_manual(Ring * ring) {
+
+    uint16_t x = 10;
+    uint16_t y = 10;
+    uint16_t h;
+
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextSize(2);
+    y = display_text((char *) "SCRAMBLE", x, y);
+
+    _display_canvas.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
+    _display_canvas.setTextSize(3);
+    h = display_text_height((char *) "TEST") + 5;
+    y += h;
+
+    while (ring->available()) {
+    
+        uint8_t move = ring->read();
+        char * text = cube_turn_text(move, true);
+
+        if (x + display_text_width(text) > DISPLAY_WIDTH) {
+            x = 10;
+            y += h;
+        }
+
+        x = display_text(text, x, y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP, true);
+
+    }
+
+    // Buttons
+    display_clear_buttons();
+    _display_canvas.setTextSize(2);
+    display_button(0, (char *) "DONE", (DISPLAY_WIDTH - 100) / 2, 180, 100, 40, ST77XX_GREEN);
+
+    display_stats();
+
+}
+
 void display_page_inspect() {
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(6);
@@ -458,6 +597,10 @@ void display_page_solved() {
 }
 
 // ----------------------------------------------------------------------------
+
+void display_clear() {
+    _display_screen.fillScreen(ST77XX_BLACK);
+}
 
 void display_off() {
     digitalWrite(DISPLAY_BL_GPIO, LOW);

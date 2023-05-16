@@ -23,17 +23,18 @@ void cube_setup();
 bool cube_bind(uint8_t conn_handle);
 void cube_unbind();
 
-void cube_metrics_start();
-void cube_metrics_end();
+void cube_metrics_start(uint32_t ms = 0);
+void cube_metrics_end(uint32_t ms = 0);
 bool cube_running_metrics();
 unsigned short cube_turns();
 unsigned long cube_time();
+void cube_time(unsigned long ms);
 
 unsigned char * cube_cubelets();
 bool cube_updated();
 
 void cube_scramble(Ring * moves, uint8_t size);
-char * cube_turn_text(uint8_t code);
+char * cube_turn_text(uint8_t code, bool space = false);
 uint8_t cube_move_reverse(uint8_t move);
 uint8_t cube_move_sum(uint8_t move1, uint8_t move2);
 

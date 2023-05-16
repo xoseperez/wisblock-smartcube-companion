@@ -126,7 +126,7 @@ void cube_scramble(Ring * moves, uint8_t size) {
     #endif
 }
 
-char * cube_turn_text(uint8_t code) {
+char * cube_turn_text(uint8_t code, bool space) {
 
     uint8_t pos = 0;
     uint8_t face = code & 0x0F;
@@ -135,7 +135,7 @@ char * cube_turn_text(uint8_t code) {
     _cube_step[pos++] = CUBE_FACES[face];
     if (2 == count) _cube_step[pos++] = '2';
     if (3 == count) _cube_step[pos++] = '\'';
-    //_cube_step[pos++] = ' ';
+    if (space) _cube_step[pos++] = ' ';
     _cube_step[pos++] = 0;
 
     return _cube_step;
@@ -173,15 +173,19 @@ uint8_t cube_move_sum(uint8_t move1, uint8_t move2) {
 // Metrics
 // ----------------------------------------------------------------------------
 
-void cube_metrics_start() {
-    _cube_start = _cube_last_move_millis;
+void cube_metrics_start(uint32_t ms) {
+    _cube_start = (ms == 0) ? _cube_last_move_millis : ms;
     _cube_turns = 0;
     _cube_running_metrics = true;
 }
 
-void cube_metrics_end() {
-    _cube_time = _cube_last_move_millis - _cube_start;
+void cube_metrics_end(uint32_t ms) {
+    _cube_time = ((ms == 0) ? _cube_last_move_millis : ms) - _cube_start;
     _cube_running_metrics = false;
+}
+
+void cube_time(unsigned long ms) {
+    _cube_time = ms;
 }
 
 unsigned long cube_time() {
@@ -200,7 +204,7 @@ unsigned short cube_turns() {
 
 // ----------------------------------------------------------------------------
 // Protected
-// Methods called only by cubes
+// Methods called only by smart cubes
 // ----------------------------------------------------------------------------
 
 void cube_set_battery(uint8_t battery) {
@@ -229,7 +233,7 @@ void cube_move(uint8_t face, uint8_t count) {
 
     _cube_last_move_millis = millis();
 
-    uint8_t data[1] = { ((count & 0x0F) << 4) | (face & 0x0F) };
+    uint8_t data[1] = { ((count & 0x0F) << 4) + (face & 0x0F) };
     if (_cube_callback) _cube_callback(CUBE_EVENT_MOVE, data);
     
     // Metrics

@@ -59,9 +59,10 @@ void utils_sleep() {
 
     _utils_sleeping = true;
 
+    display_clear();
     display_off();
-    bluetooth_disconnect();
     bluetooth_scan(false);
+    bluetooth_disconnect();
 
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
 

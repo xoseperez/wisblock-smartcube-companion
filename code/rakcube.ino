@@ -7,30 +7,48 @@
 #include "display.h"
 #include "touch.h"
 #include "cube.h"
+#include "stackmat.h"
 #include "flash.h"
 #include "ring.h"
 
 enum {
     STATE_SLEEPING,
     STATE_INTRO,
+    STATE_CONFIG,
+    STATE_SMARTCUBE_CONNECT,
+    STATE_STACKMAT_CONNECT,
     STATE_USER,
     STATE_USER_CONFIRM_RESET,
     STATE_2D,
     STATE_3D,
     STATE_SCRAMBLE,
+    STATE_SCRAMBLE_MANUAL,
     STATE_INSPECT,
     STATE_TIMER,
     STATE_SOLVED,
-    STATE_DISCONNECT
+    STATE_DISCONNECT // TODO: delete, should go to STATE_CONFIG
+};
+
+enum {
+    MODE_SMARTCUBE,
+    MODE_STACKMAT,
+    MODE_MANUAL,
+    MODE_SHUTDOWN,
+    MODE_NONE
 };
 
 unsigned char _last_state = STATE_SLEEPING;
-unsigned char _state = STATE_INTRO;
 bool _force_state = false;
 Ring _ring;
 bool _scramble_update = false;
 
+#if DEBUG > 1
+uint8_t g_user = 3;
+#else
 uint8_t g_user = 0;
+#endif
+unsigned char g_state = STATE_INTRO;
+unsigned char g_mode = MODE_NONE;
 s_settings g_settings;
 
 bool scramble_update(uint8_t move) {
@@ -60,7 +78,7 @@ bool scramble_update(uint8_t move) {
     }
 
     if (_ring.available() == 0) {
-        _state = STATE_INSPECT;
+        g_state = STATE_INSPECT;
     } else {
         _scramble_update = true;
     }
@@ -74,73 +92,160 @@ void touch_callback(unsigned char event) {
     
     if (event == TOUCH_EVENT_RELEASE) {
         
-        if (_state == STATE_USER) {
-            TouchPointType point = touch_pointA();
-            if (point.y < 60) {
-                g_user = point.x / 60;
+        TouchPointType point = touch_pointA();
+        uint8_t button = display_get_button(point.x, point.y);
+        #if DEBUG > 1
+            Serial.printf("[MAIN] Button 0x%02X\n", button);
+        #endif
+
+        if (g_state == STATE_USER) {
+            if (0xFF != button) {
+                g_user = button;
                 _force_state = true;
             }
         }
 
-        if (_state == STATE_USER_CONFIRM_RESET) {
-            TouchPointType point = touch_pointA();
-            if ((120 < point.x) & (point.x < 160)) {
-                if (point.y > 160) {
-                    reset_user(g_user);
-                }
+        if (g_state == STATE_USER_CONFIRM_RESET) {
+            if (0 == button) reset_user(g_user);
+            if (0xFF != button) g_state = STATE_USER;
+        }
+
+        if (g_state == STATE_SOLVED) {
+            g_state = STATE_USER;
+        }
+
+        if (g_state == STATE_TIMER) {
+            cube_metrics_end(millis());
+            utils_beep();
+            g_state = STATE_SOLVED;
+        }
+
+        if (g_state == STATE_INSPECT) {
+            cube_metrics_start(millis());
+            utils_beep();
+            g_state = STATE_TIMER;
+        }
+
+        if (g_state == STATE_SCRAMBLE_MANUAL) {
+            if (0 == button) g_state = STATE_INSPECT;
+        }
+
+        if (g_state == STATE_CONFIG) {
+            switch (button) {
+
+                case 0:
+                    if (bluetooth_connected()) {
+                        g_mode = MODE_SMARTCUBE;
+                        g_state = STATE_USER;    
+                    } else {
+                        bluetooth_scan(true);
+                        g_state = STATE_SMARTCUBE_CONNECT;
+                    }
+                    break;
+
+                case 1:
+                    if (stackmat_state() != STACKMAT_STATE_DISCONNECTED) {
+                        if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
+                        g_mode = MODE_STACKMAT;
+                        g_state = STATE_USER; 
+                    } else {
+                        g_state = STATE_STACKMAT_CONNECT;
+                    }
+                    break;
+
+                case 2:
+                    if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
+                    g_mode = MODE_MANUAL;
+                    g_state = STATE_USER;
+                    break;
+
+                default:
+                    g_state = STATE_SLEEPING;
+                    break;
+
             }
-            _state = STATE_USER;
+            
+        if (g_state == STATE_INTRO) {
+            g_state = STATE_CONFIG;
+        }
+
         }
 
     }
 
     if (event == TOUCH_EVENT_LONG_CLICK) {
-        if (_state == STATE_USER) _state = STATE_USER_CONFIRM_RESET;
+        if (g_state == STATE_USER) g_state = STATE_USER_CONFIRM_RESET;
     }
 
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
-
-        switch (_state) {
-
-            case STATE_INTRO:
-                _state = STATE_SLEEPING;
-                break;
-
-            case STATE_USER:
-            case STATE_2D:
-            case STATE_3D:
-                _state = STATE_DISCONNECT;
-                break;
-
-            case STATE_INSPECT:
-            case STATE_TIMER:
-            case STATE_SOLVED:
-            case STATE_SCRAMBLE:
-                _state = STATE_2D;
-                break;
-
-            default:
-                break;
-
-        };
-
+        if (g_state == STATE_TIMER) g_state = STATE_USER;
     }
 
     if (event == TOUCH_EVENT_SWIPE_LEFT) {
 
-        if (_state == STATE_3D) _state = STATE_SCRAMBLE;
-        if (_state == STATE_2D) _state = STATE_3D;
-        if (_state == STATE_USER) _state = STATE_2D;
+        if (g_mode == MODE_SMARTCUBE) {
+            if (g_state == STATE_3D) g_state = STATE_SCRAMBLE;
+            if (g_state == STATE_2D) g_state = STATE_3D;
+            if (g_state == STATE_USER) g_state = STATE_2D;
+        } else {
+            if (g_state == STATE_USER) g_state = STATE_SCRAMBLE_MANUAL;
+        }
+        if (g_state == STATE_CONFIG) g_state = STATE_USER;
 
     }
 
     if (event == TOUCH_EVENT_SWIPE_RIGHT) {
 
-        if (_state == STATE_2D) _state = STATE_USER;
-        if (_state == STATE_3D) _state = STATE_2D;
-        if (_state == STATE_SCRAMBLE) _state = STATE_3D;
+        if (g_state == STATE_USER) g_state = STATE_CONFIG;
+        if (g_mode == MODE_SMARTCUBE) {
+            if (g_state == STATE_2D) g_state = STATE_USER;
+            if (g_state == STATE_3D) g_state = STATE_2D;
+            if (g_state == STATE_SCRAMBLE) g_state = STATE_3D;
+        } else {
+            if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
+        }
 
     }
+
+}
+
+void stackmat_callback(unsigned char event, uint8_t * data) {
+
+    #if DEBUG > 1
+        Serial.printf("[MAIN] Stackmat event #%d\n", event);
+    #endif
+
+    if (event == STACKMAT_EVENT_DISCONNECT) {
+        g_mode = MODE_NONE;
+        g_state = STATE_CONFIG;
+    }
+    
+    if (event == STACKMAT_EVENT_START) {
+        if ((g_state == STATE_SCRAMBLE_MANUAL) || (g_state == STATE_INSPECT)) {
+            cube_metrics_start(millis());
+            utils_beep();
+            g_state = STATE_TIMER;
+        }
+    }
+
+    if (event == STACKMAT_EVENT_STOP) {
+        if (g_state == STATE_TIMER) {
+            
+            cube_metrics_end(millis());
+            utils_beep();
+            g_state = STATE_SOLVED;
+            
+            // Sync time with stackmat
+            uint32_t ms = (data[0] << 24)  + (data[1] << 16) + (data[2] << 8) + data[3];
+            cube_time(ms);
+            
+        }
+    }
+
+    if (event == STACKMAT_EVENT_RESET) {
+        g_state = STATE_SCRAMBLE_MANUAL;
+    }
+
 
 }
 
@@ -150,38 +255,40 @@ void cube_callback(unsigned char event, uint8_t * data) {
 
         case CUBE_EVENT_CONNECTED:
             utils_beep();
-            _state = STATE_USER;
+            g_state = STATE_USER;
+            g_mode = MODE_SMARTCUBE;
             break;
 
         case CUBE_EVENT_DISCONNECTED:
             utils_beep();
-            _state = STATE_INTRO;
+            // TODO, check current state to avoid reset it
+            g_mode = MODE_NONE;
+            g_state = STATE_CONFIG;
             break;
 
         case CUBE_EVENT_4UTURNS:
-            if ((_state == STATE_2D) || (_state == STATE_3D)) _state = STATE_INSPECT;
+            if ((g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_INSPECT;
             break;
 
         case CUBE_EVENT_MOVE:
-            //if (_state == STATE_USER) _state = STATE_2D;
-            if (_state == STATE_SOLVED) _state = STATE_2D;
-            if (_state == STATE_INSPECT) {
+            if (g_state == STATE_SOLVED) g_state = STATE_USER;
+            if (g_state == STATE_INSPECT) {
                 cube_metrics_start();
                 utils_beep();
-                _state = STATE_TIMER;
+                g_state = STATE_TIMER;
             }
-            if (_state == STATE_SCRAMBLE) {
+            if (g_state == STATE_SCRAMBLE) {
                 if (!scramble_update(data[0])) {
-                    _state = STATE_2D;    
+                    g_state = STATE_2D;    
                 }
             }
             break;
 
         case CUBE_EVENT_SOLVED:
-            if (_state == STATE_TIMER) {
+            if (g_state == STATE_TIMER) {
                 cube_metrics_end();
                 utils_beep();
-                _state = STATE_SOLVED;
+                g_state = STATE_SOLVED;
             }
             break;
 
@@ -287,24 +394,24 @@ void state_machine() {
     static unsigned long last_change = millis();
     bool changed_display = false;
     bool save_flash = false;
-    bool changed_state = (_last_state != _state) || _force_state;
+    bool changed_state = (_last_state != g_state) || _force_state;
     _force_state = false;
-    _last_state = _state;
+    _last_state = g_state;
 
     if (changed_state) {
         last_change = millis();
         #if DEBUG>1
-            Serial.printf("[MAIN] State %d\n", _state);
+            Serial.printf("[MAIN] State %d, Mode %d\n", g_state, g_mode);
         #endif
     }
 
     display_start_transaction();
 
-    switch (_state) {
+    switch (g_state) {
 
         case STATE_SLEEPING:
             utils_sleep();
-            _state = STATE_INTRO;
+            g_state = STATE_INTRO;
             break;
 
         case STATE_INTRO:
@@ -312,8 +419,50 @@ void state_machine() {
                 display_page_intro();
                 changed_display = true;
             }
+            if (millis() - last_change > INTRO_TIMEOUT) {
+                g_state = STATE_CONFIG;
+            }
+            break;
+
+        case STATE_CONFIG:
+            if (changed_state) {
+                display_page_config(g_mode);
+                changed_display = true;
+            }
             if (millis() - last_change > SHUTDOWN_TIMEOUT) {
-                _state = STATE_SLEEPING;
+                g_state = STATE_SLEEPING;
+            }
+            break;
+
+        case STATE_SMARTCUBE_CONNECT:
+            if (changed_state) {
+                display_page_smartcube_connect();
+                changed_display = true;
+            }
+            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+                g_state = STATE_CONFIG;
+            }
+            break;
+
+        case STATE_STACKMAT_CONNECT:
+            if (changed_state) {
+                display_page_stackmat_connect();
+                changed_display = true;
+            }
+            if (stackmat_state() != STACKMAT_STATE_DISCONNECTED) {
+                if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
+                g_mode = MODE_STACKMAT;
+                g_state = STATE_USER;
+            }
+            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+                g_state = STATE_CONFIG;
+            }
+            break;
+
+        case STATE_USER:
+            if (changed_state) {
+                display_page_user(g_user);
+                changed_display = true;
             }
             break;
 
@@ -327,13 +476,6 @@ void state_machine() {
         case STATE_3D:
             if (changed_state || cube_updated()) {
                 display_page_3d();
-                changed_display = true;
-            }
-            break;
-
-        case STATE_USER:
-            if (changed_state) {
-                display_page_user(g_user);
                 changed_display = true;
             }
             break;
@@ -357,6 +499,18 @@ void state_machine() {
             }
             break;
 
+        case STATE_SCRAMBLE_MANUAL:
+            if (changed_state) {
+                cube_scramble(&_ring, SCRAMBLE_SIZE);
+                _scramble_update = true;
+            }
+            if (_scramble_update) {
+                display_page_scramble_manual(&_ring);
+                changed_display = true;
+                _scramble_update = false;
+            }
+            break;
+
         case STATE_INSPECT:
             if (changed_state) {
                 display_page_inspect();
@@ -375,7 +529,7 @@ void state_machine() {
                 unsigned long time = cube_time();
                 unsigned short turns = cube_turns();
                 if (time == 0) {
-                    _state = STATE_2D;
+                    g_state = STATE_2D;
                 } else {
 
                     add_solve(g_user, time, turns);
@@ -390,7 +544,7 @@ void state_machine() {
         
         case STATE_DISCONNECT:
             bluetooth_disconnect();
-            _state = STATE_INTRO;
+            g_state = STATE_INTRO;
         
         default:
             break;
@@ -420,31 +574,31 @@ void setup() {
     flash_setup();
     flash_load();
     bluetooth_setup();
-    bluetooth_scan(true);
     display_setup();
     cube_setup();
-    cube_set_callback(cube_callback);
+    stackmat_setup();
 
     while (!touch_setup(TOUCH_INT_PIN)) {
 	    Serial.println("[MAIN] Touch interface is not connected");
 		delay(1000);
     }
 
-    // Callback to be called upn event
+    // Callback to be called upon event
     touch_set_callback(touch_callback);
+    cube_set_callback(cube_callback);
+    stackmat_set_callback(stackmat_callback);
 
 }
 
 void loop() {
 
-    static unsigned long last = 0;
-    if (millis() - last < 10) return;
-    last = millis();
-
-    bluetooth_loop();
+    //bluetooth_loop();
+    stackmat_loop();
     touch_loop();
-    display_loop();
+    //display_loop();
     state_machine();
     wdt_feed();
+
+    utils_delay(1);
 
 }

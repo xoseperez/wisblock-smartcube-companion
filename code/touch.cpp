@@ -2,6 +2,7 @@
 #include "RAK14014_FT6336U.h"
 
 #include "touch.h"
+#include "display.h"
 
 void (*_touch_callback)(unsigned char);
 
@@ -18,6 +19,12 @@ FT6336U _touch_interface;
 // ----------------------------------------------------------------------------
 // Private
 // ----------------------------------------------------------------------------
+
+void touch_point_fix(TouchPointType * point) {
+    uint16_t x = point->x;
+    point->x = DISPLAY_WIDTH - point->y;
+    point->y = x;
+}
 
 void touch_send_event(unsigned char event) {
     if (event != _touch_event) {
@@ -51,20 +58,25 @@ void touch_process(void) {
             _touch_event_start = millis();
             _touch_pointA.x = _touch_interface.read_touch1_x();
             _touch_pointA.y = _touch_interface.read_touch1_y();
+            touch_point_fix(&_touch_pointA);
+            #if DEBUG > 1
+                //Serial.printf("[TCH] x=%d y=%d\n", _touch_pointA.x, _touch_pointA.y);
+            #endif
         }
 
         // release
         if ((_touch_state == 1) && (newstate == 0)) {
             _touch_pointB.x = _touch_interface.read_touch1_x();
             _touch_pointB.y = _touch_interface.read_touch1_y();
+            touch_point_fix(&_touch_pointB);
             if (_touch_pointB.x - _touch_pointA.x > 80) {
-                touch_send_event(TOUCH_EVENT_SWIPE_DOWN);
-            } else if (_touch_pointA.x - _touch_pointB.x > 80) {
-                touch_send_event(TOUCH_EVENT_SWIPE_UP);
-            } else if (_touch_pointB.y - _touch_pointA.y > 60) {
-                touch_send_event(TOUCH_EVENT_SWIPE_LEFT);
-            } else if (_touch_pointA.y - _touch_pointB.y > 60) {
                 touch_send_event(TOUCH_EVENT_SWIPE_RIGHT);
+            } else if (_touch_pointA.x - _touch_pointB.x > 80) {
+                touch_send_event(TOUCH_EVENT_SWIPE_LEFT);
+            } else if (_touch_pointB.y - _touch_pointA.y > 60) {
+                touch_send_event(TOUCH_EVENT_SWIPE_DOWN);
+            } else if (_touch_pointA.y - _touch_pointB.y > 60) {
+                touch_send_event(TOUCH_EVENT_SWIPE_UP);
             } else if ((millis() - _touch_event_start) > 1000) {
                 touch_send_event(TOUCH_EVENT_LONG_CLICK);
             } else {
@@ -80,6 +92,8 @@ void touch_process(void) {
             _touch_pointA.y = _touch_interface.read_touch1_y();
             _touch_pointB.x = _touch_interface.read_touch2_x();
             _touch_pointB.y = _touch_interface.read_touch2_y();
+            touch_point_fix(&_touch_pointA);
+            touch_point_fix(&_touch_pointB);
         }
 
         // release two fingers

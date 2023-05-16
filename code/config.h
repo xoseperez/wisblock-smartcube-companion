@@ -7,8 +7,9 @@
 
 #define APP_NAME                    "MAGIC CUBE TIMER"
 #define APP_SHORT_NAME              "TIMER"
-#define APP_VERSION                 "v0.6.0"
+#define APP_VERSION                 "v0.7.0"
 #define SHUTDOWN_TIMEOUT            60000
+#define INTRO_TIMEOUT               2000
 #define WDT_SECONDS                 30
 #define SCRAMBLE_SIZE               21
 
@@ -39,11 +40,21 @@
 #define TOUCH_INT_PIN               WB_IO6
 
 // ----------------------------------------------------------------------------
+// Stackmat interface
+// ----------------------------------------------------------------------------
+
+#define STACKMAT_RX_PIN             PIN_SERIAL1_RX
+#define STACKMAT_TX_PIN             PIN_SERIAL1_TX
+#define STACKMAT_BAUDRATE           1200
+#define STACKMAT_TIMEOUT            2000
+
+// ----------------------------------------------------------------------------
 // Touch
 // ----------------------------------------------------------------------------
 
 #define BUZZER_PIN                  WB_IO1
-#define BUZZER_FREQ                 525
+#define BUZZER_FREQ_OK              525
+#define BUZZER_FREQ_ERROR           220
 #define BUZZER_DURATION             150
 
 // ----------------------------------------------------------------------------

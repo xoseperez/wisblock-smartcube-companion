@@ -150,7 +150,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     #endif
 
     cube_unbind();
-    if (!utils_sleeping()) bluetooth_scan(true);
+    bluetooth_scan(!utils_sleeping());
 
 }
 
@@ -170,7 +170,7 @@ void bluetooth_scan(bool scan) {
         * - Start(0) = will scan forever since no timeout is given
         */
         Bluefruit.Scanner.setRxCallback(bluetooth_scan_callback);
-        Bluefruit.Scanner.restartOnDisconnect(true);
+        Bluefruit.Scanner.restartOnDisconnect(false);
         Bluefruit.Scanner.filterRssi(BLE_RSSI_FILTER);
         Bluefruit.Scanner.setInterval(160, 80);       // in units of 0.625 ms
         Bluefruit.Scanner.useActiveScan(true);        // Request scan response data
