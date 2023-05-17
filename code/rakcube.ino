@@ -25,8 +25,7 @@ enum {
     STATE_SCRAMBLE_MANUAL,
     STATE_INSPECT,
     STATE_TIMER,
-    STATE_SOLVED,
-    STATE_DISCONNECT // TODO: delete, should go to STATE_CONFIG
+    STATE_SOLVED
 };
 
 enum {
@@ -42,11 +41,7 @@ bool _force_state = false;
 Ring _ring;
 bool _scramble_update = false;
 
-#if DEBUG > 1
-uint8_t g_user = 3;
-#else
 uint8_t g_user = 0;
-#endif
 unsigned char g_state = STATE_INTRO;
 unsigned char g_mode = MODE_NONE;
 s_settings g_settings;
@@ -548,10 +543,6 @@ void state_machine() {
 
             }
             break;
-        
-        case STATE_DISCONNECT:
-            bluetooth_disconnect();
-            g_state = STATE_INTRO;
         
         default:
             break;

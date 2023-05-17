@@ -42,23 +42,25 @@ void stackmat_process() {
 
     if (_stackmat_state == STACKMAT_STATE_RUNNING) {
         
-        unsigned long ms = 0;
-        ms += ((_stackmat_buffer[6] - '0') *     1);
-        ms += ((_stackmat_buffer[5] - '0') *    10);
-        ms += ((_stackmat_buffer[4] - '0') *   100);
-        ms += ((_stackmat_buffer[3] - '0') *  1000);
-        ms += ((_stackmat_buffer[2] - '0') * 10000);
-        ms += ((_stackmat_buffer[1] - '0') * 60000);
-
-        uint8_t data[4] = {0};
-        data[0] = (ms >> 24) & 0xFF;
-        data[1] = (ms >> 16) & 0xFF;
-        data[2] = (ms >>  8) & 0xFF;
-        data[3] = (ms >>  0) & 0xFF;
-
         if (_stackmat_buffer[0] == 'I') {
+
+            unsigned long ms = 0;
+            ms += ((_stackmat_buffer[6] - '0') *     1);
+            ms += ((_stackmat_buffer[5] - '0') *    10);
+            ms += ((_stackmat_buffer[4] - '0') *   100);
+            ms += ((_stackmat_buffer[3] - '0') *  1000);
+            ms += ((_stackmat_buffer[2] - '0') * 10000);
+            ms += ((_stackmat_buffer[1] - '0') * 60000);
+
+            uint8_t data[4] = {0};
+            data[0] = (ms >> 24) & 0xFF;
+            data[1] = (ms >> 16) & 0xFF;
+            data[2] = (ms >>  8) & 0xFF;
+            data[3] = (ms >>  0) & 0xFF;
+
             _stackmat_state = STACKMAT_STATE_STOPPED;
             if (_stackmat_callback) _stackmat_callback(STACKMAT_EVENT_STOP, data);
+            
         }
 
     }
@@ -96,7 +98,5 @@ void stackmat_loop() {
             if (_stackmat_callback) _stackmat_callback(STACKMAT_EVENT_DISCONNECT, nullptr);
         }
     }
-
-    delay(1);
 
 }
