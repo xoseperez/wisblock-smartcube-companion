@@ -110,9 +110,11 @@ void touch_callback(unsigned char event) {
         }
 
         if (g_state == STATE_TIMER) {
-            cube_metrics_end(millis());
-            utils_beep();
-            g_state = STATE_SOLVED;
+            if (g_mode == MODE_MANUAL) {
+                cube_metrics_end(millis());
+                utils_beep();
+                g_state = STATE_SOLVED;
+            }
         }
 
         if (g_state == STATE_INSPECT) {
