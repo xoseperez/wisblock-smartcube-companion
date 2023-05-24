@@ -156,16 +156,18 @@ void touch_callback(unsigned char event) {
                     g_state = STATE_USER;
                     break;
 
-                default:
+                case 3:
                     g_state = STATE_SLEEPING;
                     break;
 
+                default:
+                    break;
+
             }
+        }
             
         if (g_state == STATE_INTRO) {
             g_state = STATE_CONFIG;
-        }
-
         }
 
     }

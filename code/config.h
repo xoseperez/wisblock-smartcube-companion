@@ -7,7 +7,7 @@
 
 #define APP_NAME                    "MAGIC CUBE TIMER"
 #define APP_SHORT_NAME              "TIMER"
-#define APP_VERSION                 "v0.7.0"
+#define APP_VERSION                 "v0.7.1"
 #define SHUTDOWN_TIMEOUT            60000
 #define CONNECT_TIMEOUT             20000    
 #define INTRO_TIMEOUT               2000
