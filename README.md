@@ -43,7 +43,7 @@ Or you can use a StackMat like the [QiYi Timer Magic Cube Speed Timer](https://s
 
 ## Connecting the hardware
 
-There is very little complexity in the setup. Read about the [WisBlock platform](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19007/Datasheet) to know more. You only need to know that the code expects the buzzer to be on slot A and the audio jack is connected to the secondary hardware serial in the J2 header. This is optional, of course, but it will require some soldering if you want support for a StackMat. 
+There is very little complexity in the setup. Read about the [WisBlock platform](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK19007/Datasheet) to know more. You only need to know that the code expects the buzzer to be on slot A and the audio jack is connected to the secondary hardware serial in the J10 header. This is optional, of course, but it will require some soldering if you want support for a StackMat. 
 
 ![Detail of the WisBlock Smart Cube Companion](images/20230527_090345x.jpg)
 
