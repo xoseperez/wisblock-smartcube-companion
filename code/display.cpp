@@ -469,11 +469,11 @@ void display_page_user(uint8_t user) {
     snprintf(line, sizeof(line), "BEST   %s           %5.2f", utils_time_to_text(g_settings.user[user].best.time, buffer, false), g_settings.user[user].best.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
-    // AV5 & AV12
+    // Ao5 & Ao12
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    snprintf(line, sizeof(line), " AV5   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].av5.time, buffer, false), g_settings.user[user].av5.turns, g_settings.user[user].av5.tps / 100.0);
+    snprintf(line, sizeof(line), " Ao5   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].ao5.time, buffer, false), g_settings.user[user].ao5.turns, g_settings.user[user].ao5.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
-    snprintf(line, sizeof(line), "AV12   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].av12.time, buffer, false), g_settings.user[user].av12.turns, g_settings.user[user].av12.tps / 100.0);
+    snprintf(line, sizeof(line), "Ao12   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].ao12.time, buffer, false), g_settings.user[user].ao12.turns, g_settings.user[user].ao12.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
     // Last 5

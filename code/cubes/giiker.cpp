@@ -123,7 +123,17 @@ void giiker_rw_callback(uint8_t* data, uint16_t len) {
         Serial.printf("[GII] Battery : %d%%\n", data[1]);
     #endif
 
-    cube_set_battery(data[1]);
+    if (data[0] == GIIKER_GET_BATTERY) {
+        cube_set_battery(data[1]);
+    }
+
+    if (data[0] == GIIKER_GET_FIRMWARE) {
+        #if DEBUG > 0
+            Serial.printf("[GII] Hardware info message received\n");
+            Serial.printf("[GII] Device name     : Giiker i3%s\n", (data[1] == 0x27) ? "S" : "");
+            Serial.printf("[GII] Software version: 0x%02X\n", data[1]);
+        #endif
+    }
 
 }
 
@@ -144,6 +154,10 @@ void giiker_data_send(uint8_t* data, uint16_t len) {
 void giiker_data_send(uint8_t opcode) {
     uint8_t data[] = { opcode };
     giiker_data_send(data, sizeof(data));
+}
+
+void giiker_battery() {
+    giiker_data_send(GIIKER_GET_BATTERY);    
 }
 
 // ----------------------------------------------------------------------------
@@ -229,8 +243,11 @@ bool giiker_start(uint16_t conn_handle) {
         Serial.println("[GII] GIIKER read characteristic found. Subscribed.");
     #endif
 
-    // Send battery request
-    giiker_data_send(GIIKER_GET_BATTERY);
+    // Get info
+    giiker_data_send(GIIKER_GET_FIRMWARE);
+    
+    // Register callbacks
+    cube_set_cube_callbacks(giiker_battery, nullptr);
 
     return true;
     

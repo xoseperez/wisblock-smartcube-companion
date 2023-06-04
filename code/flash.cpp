@@ -30,13 +30,13 @@ void flash_dump() {
             utils_time_to_text(g_settings.user[user].best.time, buffer, false);
             Serial.printf ("[FLASH] BEST    %s            %5.2f\n", buffer, g_settings.user[user].best.tps / 100.0);
 
-            // AV5
-            utils_time_to_text(g_settings.user[user].av5.time, buffer, false);
-            Serial.printf ("[FLASH]  AV5    %s    %4d    %5.2f\n", buffer, g_settings.user[user].av5.turns, g_settings.user[user].av5.tps / 100.0);
+            // Ao5
+            utils_time_to_text(g_settings.user[user].ao5.time, buffer, false);
+            Serial.printf ("[FLASH]  Ao5    %s    %4d    %5.2f\n", buffer, g_settings.user[user].ao5.turns, g_settings.user[user].ao5.tps / 100.0);
 
-            // AV12
-            utils_time_to_text(g_settings.user[user].av12.time, buffer, false);
-            Serial.printf ("[FLASH] AV12    %s    %4d    %5.2f\n", buffer, g_settings.user[user].av12.turns, g_settings.user[user].av12.tps / 100.0);
+            // Ao12
+            utils_time_to_text(g_settings.user[user].ao12.time, buffer, false);
+            Serial.printf ("[FLASH] Ao12    %s    %4d    %5.2f\n", buffer, g_settings.user[user].ao12.turns, g_settings.user[user].ao12.tps / 100.0);
 
             // Last 12
             for (uint8_t i=0; i<12; i++) {

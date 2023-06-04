@@ -22,6 +22,8 @@ uint8_t _cube_turns = 0;
 char _cube_step[4] = {0};
 
 void (*_cube_callback)(uint8_t event, uint8_t * data);
+void (*_cube_reset_callback)();
+void (*_cube_battery_callback)();
 
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -35,7 +37,12 @@ void cube_set_callback(void (*callback)(uint8_t event, uint8_t * data)) {
     _cube_callback = callback;
 }
 
+void cube_reset() {
+    if (_cube_reset_callback) _cube_reset_callback();
+}
+
 uint8_t cube_get_battery() {
+    // if (_cube_battery_callback) _cube_battery_callback(); // TODO: wait for battery update?
     return _cube_battery;
 }
 
@@ -65,6 +72,8 @@ void cube_unbind() {
     _cube_battery = 0xFF;
     if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_DISCONNECTED, nullptr);
     _cube_connected = false;
+    _cube_reset_callback = nullptr;
+    _cube_battery_callback = nullptr;
 }
 
 void cube_setup() {
@@ -209,6 +218,12 @@ unsigned short cube_turns() {
 
 void cube_set_battery(uint8_t battery) {
     _cube_battery = battery;
+}
+
+void cube_set_cube_callbacks(void (*_battery)(void), void (*_reset)(void)) {
+    _cube_battery_callback = _battery;
+    _cube_reset_callback = _reset;
+    if (_cube_battery_callback) _cube_battery_callback();
 }
 
 bool cube_solved(uint8_t * corners, uint8_t * edges) {

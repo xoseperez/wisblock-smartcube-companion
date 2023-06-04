@@ -14,12 +14,14 @@ enum {
 bool cube_solved(uint8_t * corners, uint8_t * edges);
 void cube_move(uint8_t face, uint8_t count);
 void cube_state(uint8_t * corners, uint8_t * edges, const unsigned char cfacelet[8][3], const unsigned char efacelet[12][2]);
+void cube_set_cube_callbacks(void (*)(void), void (*)(void));
 
 void cube_set_battery(uint8_t battery);
 uint8_t cube_get_battery();
 void cube_set_callback(void (*callback)(uint8_t event, uint8_t * data));
 
 void cube_setup();
+void cube_reset();
 bool cube_bind(uint8_t conn_handle);
 void cube_unbind();
 

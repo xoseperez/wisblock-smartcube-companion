@@ -180,6 +180,10 @@ void ganv2_reset() {
     ganv2_data_send(data, sizeof(data));
 }
 
+void ganv2_battery() {
+    ganv2_data_send(GANV2_GET_BATTERY);    
+}
+
 // ----------------------------------------------------------------------------
 // Bluetooth
 // ----------------------------------------------------------------------------
@@ -238,8 +242,10 @@ bool ganv2_start(uint16_t conn_handle) {
     // Query the cube
     ganv2_data_send(GANV2_GET_HARDWARE);
     ganv2_data_send(GANV2_GET_FACELETS);
-    ganv2_data_send(GANV2_GET_BATTERY);
     
+    // Register callbacks
+    cube_set_cube_callbacks(ganv2_battery, ganv2_reset);
+
     return true;
     
 }

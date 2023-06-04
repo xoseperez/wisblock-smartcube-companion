@@ -174,6 +174,8 @@ void touch_callback(unsigned char event) {
 
     if (event == TOUCH_EVENT_LONG_CLICK) {
         if (g_state == STATE_USER) g_state = STATE_USER_CONFIRM_RESET;
+        if (g_state == STATE_2D) cube_reset();
+        if (g_state == STATE_3D) cube_reset();
     }
 
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
@@ -307,13 +309,13 @@ void reset_user(uint8_t user) {
     g_settings.user[user].best.turns = 0;
     g_settings.user[user].best.tps = 0;
 
-    g_settings.user[user].av5.time = 0;
-    g_settings.user[user].av5.turns = 0;
-    g_settings.user[user].av5.tps = 0;
+    g_settings.user[user].ao5.time = 0;
+    g_settings.user[user].ao5.turns = 0;
+    g_settings.user[user].ao5.tps = 0;
     
-    g_settings.user[user].av12.time = 0;
-    g_settings.user[user].av12.turns = 0;
-    g_settings.user[user].av12.tps = 0;
+    g_settings.user[user].ao12.time = 0;
+    g_settings.user[user].ao12.turns = 0;
+    g_settings.user[user].ao12.tps = 0;
     
     for (uint8_t i=0; i<12; i++) {
         g_settings.user[user].solve[i].time = 0;
@@ -377,18 +379,18 @@ void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
         }
     }
 
-    // Save av5
+    // Save ao5
     if (has_avg5) {
-        g_settings.user[user].av5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
-        g_settings.user[user].av5.turns = turns_sum5 / 5;
-        g_settings.user[user].av5.tps = 100 * utils_tps(time_sum5, turns_sum5);
+        g_settings.user[user].ao5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
+        g_settings.user[user].ao5.turns = turns_sum5 / 5;
+        g_settings.user[user].ao5.tps = 100 * utils_tps(time_sum5, turns_sum5);
     }
 
-    // Save av12
+    // Save ao12
     if (has_avg12) {
-        g_settings.user[user].av12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
-        g_settings.user[user].av12.turns = turns_sum12 / 12;
-        g_settings.user[user].av12.tps = 100 * utils_tps(time_sum12, turns_sum12);
+        g_settings.user[user].ao12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
+        g_settings.user[user].ao12.turns = turns_sum12 / 12;
+        g_settings.user[user].ao12.tps = 100 * utils_tps(time_sum12, turns_sum12);
     }
 
 }

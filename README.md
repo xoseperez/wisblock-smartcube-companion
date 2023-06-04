@@ -12,7 +12,7 @@ This repository holds the code for the WisBlock Smart Cube Companion. A BLE devi
 * Cube actions
     * 4U to go to scramble page, 4U again to start inspect without scrambling
     * Any movement after solving the cube to see stats
-* Stores statistics for 4 different users (PB, AVG5, AV12 and last 12 individual solves)
+* Stores statistics for 4 different users (PB, Ao5, Ao12 and last 12 individual solves)
 * Reset user stats (long tap on the screen while at the user's stat page)
 * Colorful interface
 * Touchscreen for user interaction

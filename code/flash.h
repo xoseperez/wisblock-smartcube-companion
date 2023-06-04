@@ -11,11 +11,11 @@ struct s_solve {
     uint16_t tps = 0;
 };
 
-// User data: best, av5 and av12 plus 12 last solves (15 * 8 = 120 bytes)
+// User data: best, ao5 and ao12 plus 12 last solves (15 * 8 = 120 bytes)
 struct s_user {
     s_solve best;
-    s_solve av5;
-    s_solve av12;
+    s_solve ao5;
+    s_solve ao12;
     s_solve solve[12];
 };
 
