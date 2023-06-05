@@ -20,7 +20,7 @@ void flash_dump() {
 
         char buffer[30] = {0};
 
-        for (uint8_t puzzle=0; puzzle<4; puzzle++) {
+        for (uint8_t puzzle=0; puzzle<6; puzzle++) {
 
             for (uint8_t user=0; user<4; user++) {
                 
@@ -114,9 +114,9 @@ void flash_load() {
         #if DEBUG > 0
             Serial.println("[FLASH] Updating from version 1 to 2");
         #endif
-        memset((void *)&g_settings.puzzle[1], 0, sizeof(s_puzzle));
-        memset((void *)&g_settings.puzzle[2], 0, sizeof(s_puzzle));
-        memset((void *)&g_settings.puzzle[3], 0, sizeof(s_puzzle));
+        for (uint8_t i=1; i<6; i++) {
+            memset((void *)&g_settings.puzzle[i], 0, sizeof(s_puzzle));
+        }
     }
 
     flash_dump();

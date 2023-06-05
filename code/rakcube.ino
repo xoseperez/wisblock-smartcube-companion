@@ -103,6 +103,13 @@ void touch_callback(unsigned char event) {
             if (0 == button) g_state = STATE_INSPECT;
         }
 
+        if (g_state == STATE_PUZZLES) {
+            if (button < 6) {
+                g_puzzle = button;
+                g_state = STATE_USER;
+            }
+        }
+
         if (g_state == STATE_CONFIG) {
             switch (button) {
 
@@ -120,7 +127,7 @@ void touch_callback(unsigned char event) {
                     if (stackmat_state() != STACKMAT_STATE_DISCONNECTED) {
                         if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
                         g_mode = MODE_STACKMAT;
-                        g_state = STATE_USER; 
+                        g_state = STATE_PUZZLES; 
                     } else {
                         g_state = STATE_STACKMAT_CONNECT;
                     }
@@ -129,7 +136,7 @@ void touch_callback(unsigned char event) {
                 case 2:
                     if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
                     g_mode = MODE_MANUAL;
-                    g_state = STATE_USER;
+                    g_state = STATE_PUZZLES;
                     break;
 
                 case 3:
@@ -165,26 +172,35 @@ void touch_callback(unsigned char event) {
 
         if (g_mode == MODE_SMARTCUBE) {
             if (g_state == STATE_3D) g_state = STATE_SCRAMBLE;
-            if (g_state == STATE_2D) g_state = STATE_3D;
-            if ((g_puzzle == PUZZLE_3x3x3) && (g_state == STATE_USER)) g_state = STATE_2D;
-            if ((g_puzzle != PUZZLE_3x3x3) && (g_state == STATE_USER)) g_state = STATE_SCRAMBLE;
+            if (g_state == STATE_2D) {
+                if (g_puzzle == PUZZLE_3x3x3) {
+                    g_state = STATE_3D;
+                } else {
+                    g_state = STATE_INSPECT;
+                }
+            }
+            if (g_state == STATE_USER) g_state = STATE_2D;
+            if (g_state == STATE_CONFIG) g_state = STATE_USER;
         } else {
             if (g_state == STATE_USER) g_state = STATE_SCRAMBLE_MANUAL;
+            if (g_state == STATE_CONFIG) g_state = STATE_PUZZLES;
         }
-        if (g_state == STATE_CONFIG) g_state = STATE_USER;
+        if (g_state == STATE_PUZZLES) g_state = STATE_USER;
         if (g_state == STATE_SOLVED) g_state = STATE_USER;
 
     }
 
     if (event == TOUCH_EVENT_SWIPE_RIGHT) {
 
-        if (g_state == STATE_USER) g_state = STATE_CONFIG;
+        if (g_state == STATE_PUZZLES) g_state = STATE_CONFIG;
         if (g_mode == MODE_SMARTCUBE) {
+            if (g_state == STATE_USER) g_state = STATE_CONFIG;
             if (g_state == STATE_2D) g_state = STATE_USER;
             if (g_state == STATE_3D) g_state = STATE_2D;
             if ((g_puzzle == PUZZLE_3x3x3) && (g_state == STATE_SCRAMBLE)) g_state = STATE_3D;
             if ((g_puzzle != PUZZLE_3x3x3) && (g_state == STATE_SCRAMBLE)) g_state = STATE_USER;
         } else {
+            if (g_state == STATE_USER) g_state = STATE_PUZZLES;
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
         }
         if (g_state == STATE_INSPECT) g_state = STATE_USER;
@@ -251,8 +267,12 @@ void cube_callback(unsigned char event, uint8_t * data) {
             break;
 
         case CUBE_EVENT_4UTURNS:
-            if (g_state == STATE_SCRAMBLE) g_state = STATE_INSPECT;
-            if ((g_state == STATE_USER) || (g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_SCRAMBLE;
+            if (g_puzzle == PUZZLE_3x3x3) {
+                if (g_state == STATE_SCRAMBLE) g_state = STATE_INSPECT;
+                if ((g_state == STATE_USER) || (g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_SCRAMBLE;
+            } else {
+                g_state = STATE_INSPECT;
+            }
             break;
 
         case CUBE_EVENT_MOVE:
@@ -442,6 +462,16 @@ void state_machine() {
             }
             if (millis() - last_change > CONNECT_TIMEOUT) {
                 g_state = STATE_CONFIG;
+            }
+            break;
+
+        case STATE_PUZZLES:
+            if (changed_state) {
+                display_page_puzzles(g_puzzle);
+                changed_display = true;
+            }
+            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+                g_state = STATE_SLEEPING;
             }
             break;
 

@@ -29,6 +29,8 @@ static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
 
+extern uint8_t g_puzzle;
+
 // ----------------------------------------------------------------------------
 // Public
 // ----------------------------------------------------------------------------
@@ -228,9 +230,10 @@ void cube_set_cube_callbacks(void (*_battery)(void), void (*_reset)(void)) {
 
 bool cube_solved(uint8_t * corners, uint8_t * edges) {
 
-    bool solved = 
-        ((memcmp(CUBE_SOLVED_CORNERS, corners, 8) == 0) &&
-        (memcmp(CUBE_SOLVED_EDGES, edges, 12) == 0));
+    bool solved = (memcmp(CUBE_SOLVED_CORNERS, corners, 8) == 0);
+    if (g_puzzle == PUZZLE_3x3x3) {
+        solved &= (memcmp(CUBE_SOLVED_EDGES, edges, 12) == 0);
+    }
 
     if (solved) {
         if (_cube_callback) _cube_callback(CUBE_EVENT_SOLVED, nullptr);
@@ -284,29 +287,55 @@ void cube_state(uint8_t * corners, uint8_t * edges, const unsigned char cfacelet
             Serial.printf("%d ", corners[i]);
         }
         Serial.println();
-        Serial.printf("[CUB] Edges: ");
-        for (uint16_t i=0; i<12; i++) {
-            Serial.printf("%d ", edges[i]);
+        if (g_puzzle == PUZZLE_3x3x3) {
+            Serial.printf("[CUB] Edges: ");
+            for (uint16_t i=0; i<12; i++) {
+                Serial.printf("%d ", edges[i]);
+            }
+            Serial.println();
         }
-        Serial.println();
     #endif
 
-    for (uint8_t i=0; i<54; i++) {
-        _cube_cubelets[i] = CUBE_FACES[int(i / 9)];
-    }
-    for (uint8_t c=0; c<8; c++) {
-        uint8_t j = corners[c] & 0x07;
-        uint8_t ori = corners[c] >> 3;
-        for (uint8_t n=0; n<3; n++) {
-            _cube_cubelets[cfacelet[c][(n + ori) % 3]] = CUBE_FACES[int(cfacelet[j][n] / 9)];
+    if (g_puzzle == PUZZLE_3x3x3) {
+
+        for (uint8_t i=0; i<54; i++) {
+            _cube_cubelets[i] = CUBE_FACES[int(i / 9)];
         }
-    }
-    for (uint8_t e=0; e<12; e++) {
-        uint8_t j = edges[e] >> 1;
-        uint8_t ori = edges[e] & 0x01;
-        for (uint8_t n=0; n<2; n++) {
-            _cube_cubelets[efacelet[e][(n + ori) % 2]] = CUBE_FACES[int(efacelet[j][n] / 9)];
+    
+        for (uint8_t c=0; c<8; c++) {
+            uint8_t j = corners[c] & 0x07;
+            uint8_t ori = corners[c] >> 3;
+            for (uint8_t n=0; n<3; n++) {
+                _cube_cubelets[cfacelet[c][(n + ori) % 3]] = CUBE_FACES[int(cfacelet[j][n] / 9)];
+            }
         }
+    
+        for (uint8_t e=0; e<12; e++) {
+            uint8_t j = edges[e] >> 1;
+            uint8_t ori = edges[e] & 0x01;
+            for (uint8_t n=0; n<2; n++) {
+                _cube_cubelets[efacelet[e][(n + ori) % 2]] = CUBE_FACES[int(efacelet[j][n] / 9)];
+            }
+        }
+
+        _cube_cubelets[54] = 0;
+
+    } else {
+        
+        for (uint8_t i=0; i<24; i++) {
+            _cube_cubelets[i] = CUBE_FACES[int(i / 4)];
+        }
+
+        for (uint8_t c=0; c<8; c++) {
+            uint8_t j = corners[c] & 0x07;
+            uint8_t ori = corners[c] >> 3;
+            for (uint8_t n=0; n<3; n++) {
+                _cube_cubelets[cfacelet[c][(n + ori) % 3]] = CUBE_FACES[int(cfacelet[j][n] / 4)];
+            }
+        }
+    
+        _cube_cubelets[24] = 0;
+
     }
 
     #if DEBUG>1

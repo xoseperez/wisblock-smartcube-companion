@@ -24,6 +24,7 @@ struct s_button {
 
 // Private
 uint16_t display_text(char * text, uint16_t x, uint16_t y, uint8_t align = 0, bool return_x = false);
+void display_update_2x2x2_2d(uint16_t center_x = 0, uint16_t center_y = 0, unsigned char size = 20);
 void display_update_3x3x3_2d(uint16_t center_x = 0, uint16_t center_y = 0, unsigned char size = 20);
 void display_button(uint8_t id, char * text, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t buttoncolor, uint32_t textcolor = ST77XX_BLACK);
 
@@ -32,6 +33,7 @@ void display_page_intro();
 void display_page_config(uint8_t mode);
 void display_page_smartcube_connect();
 void display_page_stackmat_connect();
+void display_page_puzzles(uint8_t puzzle);
 void display_page_user(uint8_t puzzle, uint8_t user);
 void display_page_user_confirm_reset(uint8_t user);
 void display_page_2d();

@@ -23,6 +23,7 @@ enum {
     STATE_CONFIG,
     STATE_SMARTCUBE_CONNECT,
     STATE_STACKMAT_CONNECT,
+    STATE_PUZZLES,
     STATE_USER,
     STATE_USER_CONFIRM_RESET,
     STATE_2D,
@@ -46,7 +47,9 @@ enum {
     PUZZLE_3x3x3,
     PUZZLE_2x2x2,
     PYRAMINX,
-    SKEWB
+    SKEWB,
+    MEGAMINX,
+    MEGAMINX2
 };
 
 // ----------------------------------------------------------------------------

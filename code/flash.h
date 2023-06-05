@@ -24,9 +24,9 @@ struct s_puzzle {
     s_user user[4];
 };
 
-// Puzzles (480 * 1 = 480 bytes)
+// Puzzles (480 * 6 = 2880 bytes)
 struct s_settings {
-    s_puzzle puzzle[4];
+    s_puzzle puzzle[6];
 };
 
 extern s_settings g_settings;

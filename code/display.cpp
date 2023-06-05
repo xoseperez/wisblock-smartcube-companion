@@ -12,6 +12,7 @@
 #include "ring.h"
 
 #include "assets/bmp_cube.h"
+#include "assets/puzzles.h"
 
 Adafruit_ST7789 _display_screen = Adafruit_ST7789(DISPLAY_CS_GPIO, DISPLAY_DC_GPIO, DISPLAY_RST_GPIO);
 GFXcanvas16 _display_canvas = GFXcanvas16(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -28,12 +29,15 @@ uint16_t _cube_colors[6] = {
 
 s_button _display_buttons[10];
 uint8_t _display_buttons_count = 0;
+extern uint8_t g_puzzle;
 
-const char * PUZZLE_NAMES[4] = {
+const char * PUZZLE_NAMES[6] = {
     "3x3x3",
     "2x2x2",
     "PYRAMINX",
-    "SKEWB"
+    "SKEWB",
+    "MEGAMINX",
+    "MEGAMINX2"
 };
 
 const char * DISPLAY_CONFIG_BUTTONS[] = {
@@ -48,16 +52,32 @@ const char * DISPLAY_CONFIG_BUTTONS[] = {
 // Private
 // ----------------------------------------------------------------------------
 
-static void display_draw_bmp(const GUI_BITMAP *bmp, uint16_t x, uint16_t y, uint8_t step) {
+static void display_draw_bmp(const GUI_BITMAP *bmp, uint16_t x, uint16_t y, uint16_t transparent, uint8_t step) {
     uint32_t index = 0;
     uint16_t w = bmp->xSize / step;
     uint16_t h = bmp->ySize / step;
     for (uint16_t j=0; j<h; j++) {
         for (uint16_t i=0; i<w; i++) {
-            _display_canvas.drawPixel(x+i, y+j, bmp->date[index]);
+            if (transparent != bmp->date[index]) _display_canvas.drawPixel(x+i, y+j, bmp->date[index]);
             index += step;
         }
         index += (bmp->xSize * (step - 1));
+    }
+}
+
+static void display_draw_puzzle(const uint8_t *bmp, uint16_t x, uint16_t y) {
+    
+    uint32_t byte = 0;
+    uint8_t bit = 0;
+    uint8_t value, pixel;
+
+    for (uint16_t j=0; j<64; j++) {
+        for (uint16_t i=0; i<64; i++) {
+            if (0 == bit) value = bmp[byte++];
+            pixel = (value >> (7-bit)) & 0x01;
+            if (0 == pixel) _display_canvas.drawPixel(x+i-32, y+j-32, 0);
+            bit = (bit + 1) % 8;
+        }
     }
 }
 
@@ -171,6 +191,76 @@ void display_update_cube_3d() {
         _display_canvas.fillTriangle(points[0][0], points[0][2], points[1][0], points[1][2], points[2][0], points[2][2], _cube_colors[cc[cubelet]]);
         _display_canvas.fillTriangle(points[0][0], points[0][2], points[2][0], points[2][2], points[3][0], points[3][2], _cube_colors[cc[cubelet]]);
 
+    }
+
+}
+
+void display_update_2x2x2_2d(uint16_t center_x, uint16_t center_y, unsigned char size) {
+
+    // Get cubelets
+    unsigned char * cubelets = cube_cubelets();
+
+    // translate cubelets to _cube_colors
+    uint8_t cc[24] = {0};
+    for (uint8_t i=0; i<24; i++) {
+      if (cubelets[i] == 'U') cc[i] = 0;
+      if (cubelets[i] == 'R') cc[i] = 1;
+      if (cubelets[i] == 'F') cc[i] = 2;
+      if (cubelets[i] == 'D') cc[i] = 3;
+      if (cubelets[i] == 'L') cc[i] = 4;
+      if (cubelets[i] == 'B') cc[i] = 5;
+    }
+
+    uint8_t gap = size / 10;
+    if (gap == 0) gap = 1;
+    if (center_x == 0) center_x = DISPLAY_WIDTH / 2;
+    if (center_y == 0) center_y = DISPLAY_HEIGHT / 2;
+    uint8_t block = (size + gap);
+    uint8_t offset_x = center_x - 8 * block / 2;
+    uint8_t offset_y = center_y - 6 * block / 2;
+    uint8_t x = 0, y = 0;
+    uint8_t index = 0;
+
+    // U
+    x = offset_x + 2 * block;
+    y = offset_y + 2 * block;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+      _display_canvas.fillRect(x + j * block, y + i * block, size, size, _cube_colors[cc[index++]]);
+    }
+
+    // R
+    x = offset_x + 4 * block;
+    y = offset_y + 2 * block;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+      _display_canvas.fillRect(x + i * block, y + (1-j) * block, size, size, _cube_colors[cc[index++]]);
+    }
+
+    // F
+    x = offset_x + 2 * block;
+    y = offset_y + 4 * block;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+      _display_canvas.fillRect(x + j * block, y + i * block, size, size, _cube_colors[cc[index++]]);
+    }
+
+    // D
+    x = offset_x + 6 * block;
+    y = offset_y + 2 * block;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+      _display_canvas.fillRect(x + (1-j) * block, y + (1-i) * block, size, size, _cube_colors[cc[index++]]);
+    }
+
+    // L
+    x = offset_x + 0 * block;
+    y = offset_y + 2 * block;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+      _display_canvas.fillRect(x + (1-i) * block, y + j * block, size, size, _cube_colors[cc[index++]]);
+    }
+
+    // B
+    x = offset_x + 2 * block;
+    y = offset_y + 0 * block;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+      _display_canvas.fillRect(x + (1-j) * block, y + (1-i) * block, size, size, _cube_colors[cc[index++]]);
     }
 
 }
@@ -295,6 +385,7 @@ void display_stats() {
     sprintf(buffer, "USER %d", g_user+1);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     display_text(buffer, 310, y+=10, DISPLAY_ALIGN_RIGHT);
+    display_text((char *) PUZZLE_NAMES[g_puzzle], 310, y+=10, DISPLAY_ALIGN_RIGHT);
 
     if (g_mode < 3) {
         _display_canvas.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
@@ -391,7 +482,7 @@ uint8_t display_get_button(uint16_t x, uint16_t y) {
 
 void display_page_intro() {
     
-    display_draw_bmp(&bmp_cube_info, 20, 20, 1);
+    display_draw_bmp(&bmp_cube_info, 20, 20, 0, 1);
     _display_canvas.setTextSize(1);
     _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
     display_text((char *) APP_NAME, 310, 210, DISPLAY_ALIGN_RIGHT | DISPLAY_ALIGN_BOTTOM);
@@ -413,9 +504,25 @@ void display_page_config(uint8_t mode) {
 
 }
 
+void display_page_puzzles(uint8_t puzzle) {
+
+    uint16_t margin = 10;
+    uint16_t height = (DISPLAY_HEIGHT - 3 * margin) / 2;
+    uint16_t width = (DISPLAY_WIDTH - 4 * margin) / 3;
+
+    display_clear_buttons();
+    for (uint8_t i=0; i<6; i++) {
+        uint8_t x = margin + (margin + width) * (i%3);
+        uint8_t y = margin + (margin + height) * ((int) (i/3));
+        display_button(i, (char *) "", x, y, width, height, puzzle == i ? ST77XX_GREEN : ST77XX_RED);
+        display_draw_puzzle(pixels[i], x + width/2, y + height / 2);
+    }
+
+}
+
 void display_page_smartcube_connect() {
     
-    display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 2);
+    display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 0, 2);
 
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
@@ -427,7 +534,7 @@ void display_page_smartcube_connect() {
 
 void display_page_stackmat_connect() {
     
-    display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 2);
+    display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 0, 2);
 
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
@@ -438,7 +545,11 @@ void display_page_stackmat_connect() {
 }
 
 void display_page_2d() {
-    display_update_3x3x3_2d();
+    if (g_puzzle == PUZZLE_3x3x3) {
+        display_update_3x3x3_2d();
+    } else {
+        display_update_2x2x2_2d();
+    }
     display_stats();
 }
 

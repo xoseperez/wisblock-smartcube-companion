@@ -1,12 +1,23 @@
 #include <Arduino.h>
 #include <bluefruit.h>
 
+#include "config.h"
 #include "bluetooth.h"
 #include "cube.h"
 #include "giiker.h"
 
 static const uint8_t GIIKER_FACE_MAP[] = {5, 3, 4, 0, 1, 2};
-static const unsigned char GIIKER_CORNER_FACELET[8][3] = {
+static const unsigned char GIIKER_CORNER_FACELET_2x2x2[8][3] = {
+	{11, 6, 13},
+	{9, 3, 4},
+	{8, 17, 2},
+	{10, 12, 19},
+	{22, 15, 7},
+	{20, 5, 1},
+	{21, 0, 16},
+	{23, 18, 14},
+};
+static const unsigned char GIIKER_CORNER_FACELET_3x3x3[8][3] = {
 	{26, 15, 29},
 	{20, 8, 9},
 	{18, 38, 6},
@@ -31,6 +42,8 @@ static const unsigned char GIIKER_EDGE_FACELET[12][2] = {
 	{50, 39}
 };
 static const uint8_t GIIKER_KEY[] = { 176, 81, 104, 224, 86, 137, 237, 119, 38, 26, 193, 161, 210, 126, 150, 81, 93, 13, 236, 249, 89, 235, 88, 24, 113, 81, 214, 131, 130, 199, 2, 169, 39, 165, 171, 41 };
+
+extern uint8_t g_puzzle;
 
 // ----------------------------------------------------------------------------
 // 
@@ -78,22 +91,27 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
         uint8_t cube_edges[12];
         int8_t mask[] = { -1, 1, -1, 1, 1, -1, 1, -1 };
 
+        // Corners
         for (uint8_t i=0; i<8; i++) {
             cube_corners[i] = (decoded[i] - 1) | ((3 + decoded[i + 8] * mask[i]) % 3) << 3;
         }   
-        uint8_t k=0;
-        for (uint8_t i=0; i<3; i++) {
-            for (uint8_t j=8; j!=0; j>>=1) {
-                if (decoded[i + 28] & j) {
-                    cube_edges_orientation[k++] = 1;
-                } else {
-                    cube_edges_orientation[k++] = 0;
+        
+        // Edges (only for 3x3x3)
+        if (g_puzzle == PUZZLE_3x3x3) {
+            uint8_t k=0;
+            for (uint8_t i=0; i<3; i++) {
+                for (uint8_t j=8; j!=0; j>>=1) {
+                    if (decoded[i + 28] & j) {
+                        cube_edges_orientation[k++] = 1;
+                    } else {
+                        cube_edges_orientation[k++] = 0;
+                    }
                 }
             }
+            for (uint8_t i=0; i<12; i++) {
+                cube_edges[i] = (decoded[i + 16] - 1) << 1 | cube_edges_orientation[i];
+            }   
         }
-        for (uint8_t i=0; i<12; i++) {
-            cube_edges[i] = (decoded[i + 16] - 1) << 1 | cube_edges_orientation[i];
-        }   
 
         // Moves
         cube_move(GIIKER_FACE_MAP[decoded[32]-1], decoded[33]);
@@ -102,7 +120,11 @@ void giiker_data_callback(uint8_t* data, uint16_t len) {
         cube_solved(cube_corners, cube_edges);
 
         // State
-        cube_state(cube_corners, cube_edges, GIIKER_CORNER_FACELET, GIIKER_EDGE_FACELET);
+        if (g_puzzle == PUZZLE_3x3x3) {
+            cube_state(cube_corners, cube_edges, GIIKER_CORNER_FACELET_3x3x3, GIIKER_EDGE_FACELET);
+        } else {
+            cube_state(cube_corners, cube_edges, GIIKER_CORNER_FACELET_2x2x2, GIIKER_EDGE_FACELET);
+        }
 
         
     }
@@ -119,19 +141,24 @@ void giiker_rw_callback(uint8_t* data, uint16_t len) {
         Serial.println();
     #endif
         
-    #if DEBUG > 0
-        Serial.printf("[GII] Battery : %d%%\n", data[1]);
-    #endif
-
-    if (data[0] == GIIKER_GET_BATTERY) {
+    if (data[0] == GIIKER_GET_BATTERY) { // B5
         cube_set_battery(data[1]);
+        #if DEBUG > 0
+            Serial.printf("[GII] Battery         : %d%%\n", data[1]);
+        #endif
     }
 
-    if (data[0] == GIIKER_GET_FIRMWARE) {
+    if (data[0] == GIIKER_GET_FIRMWARE) { // B7
         #if DEBUG > 0
-            Serial.printf("[GII] Hardware info message received\n");
             Serial.printf("[GII] Device name     : %s\n", bluetooth_peer_name());
             Serial.printf("[GII] Software version: 0x%02X\n", data[1]);
+        #endif
+    }
+
+    if (data[0] == GIIKER_GET_MOVES) { // CC
+        #if DEBUG > 0
+            uint32_t moves = (data[1] << 24) + (data[2] << 16) + (data[3] << 8) + data[4];
+            Serial.printf("[GII] Number of moves : %d\n", moves);
         #endif
     }
 
@@ -245,6 +272,14 @@ bool giiker_start(uint16_t conn_handle) {
 
     // Get info
     giiker_data_send(GIIKER_GET_FIRMWARE);
+    giiker_data_send(GIIKER_GET_MOVES);
+
+    // Define puzzle
+    if (strncmp("Gi2", bluetooth_peer_name(), 3) == 0) {
+        g_puzzle = PUZZLE_2x2x2;
+    } else {
+        g_puzzle = PUZZLE_3x3x3;
+    }
     
     // Register callbacks
     cube_set_cube_callbacks(giiker_battery, nullptr);

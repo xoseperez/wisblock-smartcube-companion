@@ -3,6 +3,7 @@
 
 #define GIIKER_GET_BATTERY 0xB5
 #define GIIKER_GET_FIRMWARE 0xB7
+#define GIIKER_GET_MOVES 0xCC
 
 void giiker_init();
 bool giiker_start(uint16_t conn_handle);
