@@ -2,6 +2,7 @@
 #include <AES.h>
 #include <bluefruit.h>
 
+#include "config.h"
 #include "bluetooth.h"
 #include "utils.h"
 #include "cube.h"
@@ -32,6 +33,8 @@ static const uint8_t GANV2_EDGE_FACELET[12][2] = {
     {50, 39}, // BL
     {48, 14}  // BR
 };
+
+extern uint8_t g_puzzle;
 
 // ----------------------------------------------------------------------------
 // AES

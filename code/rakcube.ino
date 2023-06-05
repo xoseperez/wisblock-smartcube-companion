@@ -11,38 +11,6 @@
 #include "flash.h"
 #include "ring.h"
 
-enum {
-    STATE_SLEEPING,
-    STATE_INTRO,
-    STATE_CONFIG,
-    STATE_SMARTCUBE_CONNECT,
-    STATE_STACKMAT_CONNECT,
-    STATE_USER,
-    STATE_USER_CONFIRM_RESET,
-    STATE_2D,
-    STATE_3D,
-    STATE_SCRAMBLE,
-    STATE_SCRAMBLE_MANUAL,
-    STATE_INSPECT,
-    STATE_TIMER,
-    STATE_SOLVED
-};
-
-enum {
-    MODE_SMARTCUBE,
-    MODE_STACKMAT,
-    MODE_MANUAL,
-    MODE_SHUTDOWN,
-    MODE_NONE
-};
-
-enum {
-    PUZZLE_3x3x3,
-    PUZZLE_2x2x2,
-    PYRAMINX,
-    SKEWB
-};
-
 unsigned char _last_state = STATE_SLEEPING;
 bool _force_state = false;
 Ring _ring;

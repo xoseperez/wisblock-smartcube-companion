@@ -24,7 +24,7 @@ struct s_button {
 
 // Private
 uint16_t display_text(char * text, uint16_t x, uint16_t y, uint8_t align = 0, bool return_x = false);
-void display_update_cube(uint16_t center_x = 0, uint16_t center_y = 0, unsigned char size = 20);
+void display_update_3x3x3_2d(uint16_t center_x = 0, uint16_t center_y = 0, unsigned char size = 20);
 void display_button(uint8_t id, char * text, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t buttoncolor, uint32_t textcolor = ST77XX_BLACK);
 
 // Public
