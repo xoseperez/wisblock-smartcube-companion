@@ -36,12 +36,20 @@ enum {
     MODE_NONE
 };
 
+enum {
+    PUZZLE_3x3x3,
+    PUZZLE_2x2x2,
+    PYRAMINX,
+    SKEWB
+};
+
 unsigned char _last_state = STATE_SLEEPING;
 bool _force_state = false;
 Ring _ring;
 bool _scramble_update = false;
 
 uint8_t g_user = 0;
+uint8_t g_puzzle = PUZZLE_3x3x3;
 unsigned char g_state = STATE_INTRO;
 unsigned char g_mode = MODE_NONE;
 s_settings g_settings;
@@ -101,7 +109,7 @@ void touch_callback(unsigned char event) {
         }
 
         if (g_state == STATE_USER_CONFIRM_RESET) {
-            if (0 == button) reset_user(g_user);
+            if (0 == button) reset_puzzle_user(g_puzzle, g_user);
             if (0xFF != button) g_state = STATE_USER;
         }
 
@@ -190,7 +198,8 @@ void touch_callback(unsigned char event) {
         if (g_mode == MODE_SMARTCUBE) {
             if (g_state == STATE_3D) g_state = STATE_SCRAMBLE;
             if (g_state == STATE_2D) g_state = STATE_3D;
-            if (g_state == STATE_USER) g_state = STATE_2D;
+            if ((g_puzzle == PUZZLE_3x3x3) && (g_state == STATE_USER)) g_state = STATE_2D;
+            if ((g_puzzle != PUZZLE_3x3x3) && (g_state == STATE_USER)) g_state = STATE_SCRAMBLE;
         } else {
             if (g_state == STATE_USER) g_state = STATE_SCRAMBLE_MANUAL;
         }
@@ -205,7 +214,8 @@ void touch_callback(unsigned char event) {
         if (g_mode == MODE_SMARTCUBE) {
             if (g_state == STATE_2D) g_state = STATE_USER;
             if (g_state == STATE_3D) g_state = STATE_2D;
-            if (g_state == STATE_SCRAMBLE) g_state = STATE_3D;
+            if ((g_puzzle == PUZZLE_3x3x3) && (g_state == STATE_SCRAMBLE)) g_state = STATE_3D;
+            if ((g_puzzle != PUZZLE_3x3x3) && (g_state == STATE_SCRAMBLE)) g_state = STATE_USER;
         } else {
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
         }
@@ -303,31 +313,31 @@ void cube_callback(unsigned char event, uint8_t * data) {
 
 }
 
-void reset_user(uint8_t user) {
+void reset_puzzle_user(uint8_t puzzle, uint8_t user) {
 
-    g_settings.user[user].best.time = 0;
-    g_settings.user[user].best.turns = 0;
-    g_settings.user[user].best.tps = 0;
+    g_settings.puzzle[puzzle].user[user].best.time = 0;
+    g_settings.puzzle[puzzle].user[user].best.turns = 0;
+    g_settings.puzzle[puzzle].user[user].best.tps = 0;
 
-    g_settings.user[user].ao5.time = 0;
-    g_settings.user[user].ao5.turns = 0;
-    g_settings.user[user].ao5.tps = 0;
+    g_settings.puzzle[puzzle].user[user].ao5.time = 0;
+    g_settings.puzzle[puzzle].user[user].ao5.turns = 0;
+    g_settings.puzzle[puzzle].user[user].ao5.tps = 0;
     
-    g_settings.user[user].ao12.time = 0;
-    g_settings.user[user].ao12.turns = 0;
-    g_settings.user[user].ao12.tps = 0;
+    g_settings.puzzle[puzzle].user[user].ao12.time = 0;
+    g_settings.puzzle[puzzle].user[user].ao12.turns = 0;
+    g_settings.puzzle[puzzle].user[user].ao12.tps = 0;
     
     for (uint8_t i=0; i<12; i++) {
-        g_settings.user[user].solve[i].time = 0;
-        g_settings.user[user].solve[i].turns = 0;
-        g_settings.user[user].solve[i].tps = 0;
+        g_settings.puzzle[puzzle].user[user].solve[i].time = 0;
+        g_settings.puzzle[puzzle].user[user].solve[i].turns = 0;
+        g_settings.puzzle[puzzle].user[user].solve[i].tps = 0;
     }
 
     flash_save();
 
 }
 
-void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
+void add_solve(uint8_t puzzle, uint8_t user, uint32_t time, uint16_t turns) {
 
     bool has_avg5 = true;
     bool has_avg12 = true;
@@ -343,54 +353,54 @@ void add_solve(uint8_t user, uint32_t time, uint16_t turns) {
 
     // Move solves
     for (int8_t i=10; i>=0; i--) {
-        if (g_settings.user[user].solve[i].time > 0) {
-            if (time_sum12_min > g_settings.user[user].solve[i].time) time_sum12_min = g_settings.user[user].solve[i].time;
-            if (time_sum12_max < g_settings.user[user].solve[i].time) time_sum12_max = g_settings.user[user].solve[i].time;
-            time_sum12 += g_settings.user[user].solve[i].time;
-            turns_sum12 += g_settings.user[user].solve[i].turns;
+        if (g_settings.puzzle[puzzle].user[user].solve[i].time > 0) {
+            if (time_sum12_min > g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum12_min = g_settings.puzzle[puzzle].user[user].solve[i].time;
+            if (time_sum12_max < g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum12_max = g_settings.puzzle[puzzle].user[user].solve[i].time;
+            time_sum12 += g_settings.puzzle[puzzle].user[user].solve[i].time;
+            turns_sum12 += g_settings.puzzle[puzzle].user[user].solve[i].turns;
             if (i<4) {
-                if (time_sum5_min > g_settings.user[user].solve[i].time) time_sum5_min = g_settings.user[user].solve[i].time;
-                if (time_sum5_max < g_settings.user[user].solve[i].time) time_sum5_max = g_settings.user[user].solve[i].time;
-                time_sum5 += g_settings.user[user].solve[i].time;
-                turns_sum5 += g_settings.user[user].solve[i].turns;
+                if (time_sum5_min > g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum5_min = g_settings.puzzle[puzzle].user[user].solve[i].time;
+                if (time_sum5_max < g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum5_max = g_settings.puzzle[puzzle].user[user].solve[i].time;
+                time_sum5 += g_settings.puzzle[puzzle].user[user].solve[i].time;
+                turns_sum5 += g_settings.puzzle[puzzle].user[user].solve[i].turns;
             }
         } else {
             has_avg12 = false;
             if (i<4) has_avg5 = false;
         }
-        g_settings.user[user].solve[i+1].time = g_settings.user[user].solve[i].time;
-        g_settings.user[user].solve[i+1].turns = g_settings.user[user].solve[i].turns;
-        g_settings.user[user].solve[i+1].tps = g_settings.user[user].solve[i].tps;
+        g_settings.puzzle[puzzle].user[user].solve[i+1].time = g_settings.puzzle[puzzle].user[user].solve[i].time;
+        g_settings.puzzle[puzzle].user[user].solve[i+1].turns = g_settings.puzzle[puzzle].user[user].solve[i].turns;
+        g_settings.puzzle[puzzle].user[user].solve[i+1].tps = g_settings.puzzle[puzzle].user[user].solve[i].tps;
     }
 
     // Save last solve
-    g_settings.user[user].solve[0].time = time;
-    g_settings.user[user].solve[0].turns = turns;
-    g_settings.user[user].solve[0].tps = tps;
+    g_settings.puzzle[puzzle].user[user].solve[0].time = time;
+    g_settings.puzzle[puzzle].user[user].solve[0].turns = turns;
+    g_settings.puzzle[puzzle].user[user].solve[0].tps = tps;
 
     // Save best solve
     {
-        if (g_settings.user[user].best.time == 0) {
-            g_settings.user[user].best.time = time;
-            g_settings.user[user].best.tps = tps;
+        if (g_settings.puzzle[puzzle].user[user].best.time == 0) {
+            g_settings.puzzle[puzzle].user[user].best.time = time;
+            g_settings.puzzle[puzzle].user[user].best.tps = tps;
         } else {
-            if (time < g_settings.user[user].best.time) g_settings.user[user].best.time = time;
-            if (tps > g_settings.user[user].best.tps) g_settings.user[user].best.tps = tps;
+            if (time < g_settings.puzzle[puzzle].user[user].best.time) g_settings.puzzle[puzzle].user[user].best.time = time;
+            if (tps > g_settings.puzzle[puzzle].user[user].best.tps) g_settings.puzzle[puzzle].user[user].best.tps = tps;
         }
     }
 
     // Save ao5
     if (has_avg5) {
-        g_settings.user[user].ao5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
-        g_settings.user[user].ao5.turns = turns_sum5 / 5;
-        g_settings.user[user].ao5.tps = 100 * utils_tps(time_sum5, turns_sum5);
+        g_settings.puzzle[puzzle].user[user].ao5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
+        g_settings.puzzle[puzzle].user[user].ao5.turns = turns_sum5 / 5;
+        g_settings.puzzle[puzzle].user[user].ao5.tps = 100 * utils_tps(time_sum5, turns_sum5);
     }
 
     // Save ao12
     if (has_avg12) {
-        g_settings.user[user].ao12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
-        g_settings.user[user].ao12.turns = turns_sum12 / 12;
-        g_settings.user[user].ao12.tps = 100 * utils_tps(time_sum12, turns_sum12);
+        g_settings.puzzle[puzzle].user[user].ao12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
+        g_settings.puzzle[puzzle].user[user].ao12.turns = turns_sum12 / 12;
+        g_settings.puzzle[puzzle].user[user].ao12.tps = 100 * utils_tps(time_sum12, turns_sum12);
     }
 
 }
@@ -469,7 +479,7 @@ void state_machine() {
 
         case STATE_USER:
             if (changed_state) {
-                display_page_user(g_user);
+                display_page_user(g_puzzle, g_user);
                 changed_display = true;
             }
             break;
@@ -540,7 +550,7 @@ void state_machine() {
                     g_state = STATE_2D;
                 } else {
 
-                    add_solve(g_user, time, turns);
+                    add_solve(g_puzzle, g_user, time, turns);
                     save_flash = true;
 
                     display_page_solved();

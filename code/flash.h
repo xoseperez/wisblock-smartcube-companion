@@ -2,7 +2,7 @@
 #define _FLASH_H
 
 #define FLASH_MAGIC_NUMBER  0xA5
-#define FLASH_VERSION       1
+#define FLASH_VERSION       2
 
 // A single solve data (8 bytes)
 struct s_solve {
@@ -19,9 +19,14 @@ struct s_user {
     s_solve solve[12];
 };
 
-// Users (120 * 4 + 2 = 482 bytes)
-struct s_settings {
+// Users (120 * 4 = 480 bytes)
+struct s_puzzle {
     s_user user[4];
+};
+
+// Puzzles (480 * 1 = 480 bytes)
+struct s_settings {
+    s_puzzle puzzle[4];
 };
 
 extern s_settings g_settings;

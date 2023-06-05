@@ -130,7 +130,7 @@ void giiker_rw_callback(uint8_t* data, uint16_t len) {
     if (data[0] == GIIKER_GET_FIRMWARE) {
         #if DEBUG > 0
             Serial.printf("[GII] Hardware info message received\n");
-            Serial.printf("[GII] Device name     : Giiker i3%s\n", (data[1] == 0x27) ? "S" : "");
+            Serial.printf("[GII] Device name     : %s\n", bluetooth_peer_name());
             Serial.printf("[GII] Software version: 0x%02X\n", data[1]);
         #endif
     }

@@ -243,6 +243,9 @@ bool ganv2_start(uint16_t conn_handle) {
     ganv2_data_send(GANV2_GET_HARDWARE);
     ganv2_data_send(GANV2_GET_FACELETS);
     
+    // Set cube as 3x3x3
+    g_puzzle = PUZZLE_3x3x3;
+
     // Register callbacks
     cube_set_cube_callbacks(ganv2_battery, ganv2_reset);
 

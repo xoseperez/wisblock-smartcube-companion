@@ -29,6 +29,13 @@ uint16_t _cube_colors[6] = {
 s_button _display_buttons[10];
 uint8_t _display_buttons_count = 0;
 
+const char * PUZZLE_NAMES[4] = {
+    "3x3x3",
+    "2x2x2",
+    "PYRAMINX",
+    "SKEWB"
+};
+
 const char * DISPLAY_CONFIG_BUTTONS[] = {
     "SMARTCUBE",
     "STACKMAT",
@@ -60,7 +67,7 @@ float display_angle_alpha = 150.0 * PI / 180.0; // z axis
 float display_angle_beta = 180.0 * PI / 180.0; // y axis
 float display_angle_gamma = 20.0 * PI / 180.0; // x axis
 
-void display_update_cube_3d_init() {
+void display_update_3x3x3_3d_init() {
 
     uint8_t index = 0;
     int16_t x, y, z;
@@ -168,8 +175,7 @@ void display_update_cube_3d() {
 
 }
 
-
-void display_update_cube(uint16_t center_x, uint16_t center_y, unsigned char size) {
+void display_update_3x3x3_2d(uint16_t center_x, uint16_t center_y, unsigned char size) {
 
     // Get cubelets
     unsigned char * cubelets = cube_cubelets();
@@ -432,7 +438,7 @@ void display_page_stackmat_connect() {
 }
 
 void display_page_2d() {
-    display_update_cube();
+    display_update_3x3x3_2d();
     display_stats();
 }
 
@@ -441,7 +447,7 @@ void display_page_3d() {
     display_stats();
 }
 
-void display_page_user(uint8_t user) {
+void display_page_user(uint8_t puzzle, uint8_t user) {
 
     uint8_t y=20;
     uint8_t step_y=10;
@@ -451,7 +457,7 @@ void display_page_user(uint8_t user) {
 
     _display_canvas.setTextSize(2);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    snprintf(line, sizeof(line), "STATS FOR USER %d", user+1);
+    snprintf(line, sizeof(line), "USER %d - %s", user+1, PUZZLE_NAMES[puzzle]);
     display_text(line, 100+x, y, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_TOP);
     y+=20;
 
@@ -466,20 +472,20 @@ void display_page_user(uint8_t user) {
 
     // Best
     _display_canvas.setTextColor(ST77XX_YELLOW, ST77XX_BLACK);
-    snprintf(line, sizeof(line), "BEST   %s           %5.2f", utils_time_to_text(g_settings.user[user].best.time, buffer, false), g_settings.user[user].best.tps / 100.0);
+    snprintf(line, sizeof(line), "BEST   %s           %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].best.time, buffer, false), g_settings.puzzle[puzzle].user[user].best.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
     // Ao5 & Ao12
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    snprintf(line, sizeof(line), " Ao5   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].ao5.time, buffer, false), g_settings.user[user].ao5.turns, g_settings.user[user].ao5.tps / 100.0);
+    snprintf(line, sizeof(line), " Ao5   %s    %4d   %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao5.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao5.turns, g_settings.puzzle[puzzle].user[user].ao5.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
-    snprintf(line, sizeof(line), "Ao12   %s    %4d   %5.2f", utils_time_to_text(g_settings.user[user].ao12.time, buffer, false), g_settings.user[user].ao12.turns, g_settings.user[user].ao12.tps / 100.0);
+    snprintf(line, sizeof(line), "Ao12   %s    %4d   %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao12.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao12.turns, g_settings.puzzle[puzzle].user[user].ao12.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
     // Last 5
     _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
     for (uint8_t i=0; i<12; i++) {
-        snprintf(line, sizeof(line), "%4d   %s    %4d   %5.2f", i+1, utils_time_to_text(g_settings.user[user].solve[i].time, buffer, false), g_settings.user[user].solve[i].turns, g_settings.user[user].solve[i].tps / 100.0);
+        snprintf(line, sizeof(line), "%4d   %s    %4d   %5.2f", i+1, utils_time_to_text(g_settings.puzzle[puzzle].user[user].solve[i].time, buffer, false), g_settings.puzzle[puzzle].user[user].solve[i].turns, g_settings.puzzle[puzzle].user[user].solve[i].tps / 100.0);
         display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
     }
 
@@ -634,7 +640,7 @@ void display_setup(void) {
     _display_screen.init(DISPLAY_HEIGHT, DISPLAY_WIDTH); // reversed
     _display_screen.setRotation(3);
 
-    display_update_cube_3d_init();
+    display_update_3x3x3_3d_init();
 
     #if DEBUG > 0
         Serial.printf("[TFT] Initialized\n");

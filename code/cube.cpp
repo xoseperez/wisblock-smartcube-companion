@@ -58,7 +58,7 @@ uint8_t * cube_cubelets() {
 
 bool cube_bind(uint8_t conn_handle) {
 
-    // Walk through cubes to identofy the connection
+    // Walk through cubes to identify the connection
     _cube_connected = false;
     _cube_connected = _cube_connected || ganv2_start(conn_handle);
     _cube_connected = _cube_connected || giiker_start(conn_handle);
