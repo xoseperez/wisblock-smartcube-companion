@@ -28,7 +28,7 @@ bool scramble_update(uint8_t move) {
     if (_ring.available() == 0) return false;
 
     uint8_t reverse = cube_move_reverse(move);
-    uint8_t sum = cube_move_sum(reverse, _ring.peek());
+    uint8_t sum = cube_move_sum(g_puzzle, reverse, _ring.peek());
     int response;
 
     // cannot be summed (different face)
@@ -183,7 +183,7 @@ void touch_callback(unsigned char event) {
                 if (g_puzzle == PUZZLE_3x3x3) {
                     g_state = STATE_3D;
                 } else {
-                    g_state = STATE_INSPECT;
+                    g_state = STATE_SCRAMBLE;
                 }
             }
             if (g_state == STATE_USER) g_state = STATE_2D;
@@ -204,8 +204,13 @@ void touch_callback(unsigned char event) {
             if (g_state == STATE_USER) g_state = STATE_CONFIG;
             if (g_state == STATE_2D) g_state = STATE_USER;
             if (g_state == STATE_3D) g_state = STATE_2D;
-            if ((g_puzzle == PUZZLE_3x3x3) && (g_state == STATE_SCRAMBLE)) g_state = STATE_3D;
-            if ((g_puzzle != PUZZLE_3x3x3) && (g_state == STATE_SCRAMBLE)) g_state = STATE_USER;
+            if (g_state == STATE_SCRAMBLE) {
+                if (g_puzzle == PUZZLE_3x3x3) {
+                    g_state = STATE_3D;
+                } else {
+                    g_state = STATE_2D;
+                }
+            }
         } else {
             if (g_state == STATE_USER) g_state = STATE_PUZZLES;
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
@@ -275,12 +280,8 @@ void cube_callback(unsigned char event, uint8_t * data) {
             break;
 
         case CUBE_EVENT_4UTURNS:
-            if (g_puzzle == PUZZLE_3x3x3) {
-                if (g_state == STATE_SCRAMBLE) g_state = STATE_INSPECT;
-                if ((g_state == STATE_USER) || (g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_SCRAMBLE;
-            } else {
-                g_state = STATE_INSPECT;
-            }
+            if (g_state == STATE_SCRAMBLE) g_state = STATE_INSPECT;
+            if ((g_state == STATE_USER) || (g_state == STATE_2D) || (g_state == STATE_3D)) g_state = STATE_SCRAMBLE;
             break;
 
         case CUBE_EVENT_MOVE:
@@ -526,7 +527,7 @@ void state_machine() {
 
         case STATE_SCRAMBLE:
             if (changed_state) {
-                cube_scramble(&_ring, SCRAMBLE_SIZE);
+                cube_scramble(g_puzzle, &_ring);
                 _scramble_update = true;
             }
             if (_scramble_update) {
@@ -538,7 +539,7 @@ void state_machine() {
 
         case STATE_SCRAMBLE_MANUAL:
             if (changed_state) {
-                cube_scramble(&_ring, SCRAMBLE_SIZE);
+                cube_scramble(g_puzzle, &_ring);
                 _scramble_update = true;
             }
             if (_scramble_update) {

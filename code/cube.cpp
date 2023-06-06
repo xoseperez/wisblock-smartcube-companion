@@ -28,6 +28,7 @@ void (*_cube_battery_callback)();
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+static const unsigned char CUBE_SCRAMBLE_SIZES[] = { 20, 9, 0, 0, 0, 0};
 
 extern uint8_t g_puzzle;
 
@@ -88,21 +89,24 @@ void cube_setup() {
 // Scramble
 // ----------------------------------------------------------------------------
 
-void cube_scramble(Ring * moves, uint8_t size) {
+void cube_scramble(uint8_t puzzle, Ring * moves) {
 
     uint8_t last_face = 0xFF;
     uint8_t last_group = 0xFF;
     uint8_t last_group_count = 0;
-    
+
     // clear buffer
     moves->clear();
+
+    uint8_t size = CUBE_SCRAMBLE_SIZES[puzzle];
+    if (size == 0) return;
     if (size > moves->size()) return;
 
     #if DEBUG>0
         Serial.print("[CUB] Scramble: ");
     #endif
 
-    uint8_t faces = SCRAMBLE_FRU_ONLY ? 3 : 6;
+    uint8_t max_group = (puzzle == PUZZLE_2x2x2) ? 2 : 3;
 
     for (uint8_t i=0; i<size; i++) {
 
@@ -111,7 +115,16 @@ void cube_scramble(Ring * moves, uint8_t size) {
         do {
             
             do {
-                face = random(0, faces);
+
+                face = random(0, 6);
+
+                // For Gi2 we only want ULB
+                if (g_puzzle == PUZZLE_2x2x2) {
+                    if (1 == face) face = 4;
+                    if (2 == face) face = 5;
+                    if (3 == face) face = 0;
+                }
+
             } while (face == last_face);
             
             if (last_group == face % 3) {
@@ -121,7 +134,7 @@ void cube_scramble(Ring * moves, uint8_t size) {
                 last_group_count = 1;
             }
         
-        } while (last_group_count>2);
+        } while (last_group_count>=max_group);
         last_face = face;
 
         uint8_t count = random(1, 4);
@@ -162,11 +175,12 @@ uint8_t cube_move_reverse(uint8_t move) {
     return (count << 4) + face;
 }
 
-uint8_t cube_move_sum(uint8_t move1, uint8_t move2) {
+uint8_t cube_move_sum(uint8_t puzzle, uint8_t move1, uint8_t move2) {
     
     uint8_t face1 = move1 & 0x0F;
+    uint8_t dir1 = move1 >> 4;
     uint8_t face2 = move2 & 0x0F;
-    if (face1 != face2) return 0xFF;
+    uint8_t dir2 = move2 >> 4;
 
     // 1 () + 1 () = 2 (2)
     // 1 () + 3 (') = cancel
@@ -175,10 +189,18 @@ uint8_t cube_move_sum(uint8_t move1, uint8_t move2) {
     // 3 (') + 2 (2) = 1 ()
     // 2 (2) + 2 (2) = cancel
 
-    uint8_t dir = ((move1 >> 4) + (move2 >> 4)) % 4;
-    if (dir == 0) return 0xFE;
+    if (puzzle == PUZZLE_3x3x3) {
+        if (face1 != face2) return 0xFF;
+    }
 
-    return (dir << 4) + face1;
+    if (puzzle == PUZZLE_2x2x2) {
+        if ((face1 % 3) != (face2 % 3)) return 0xFF;
+        //if (face1 != face2) dir1 = 4 - dir1;
+    }
+    
+    uint8_t dir = (dir1 + dir2) % 4;
+    if (dir == 0) return 0xFE;
+    return (dir << 4) + face2;
 
 }
 

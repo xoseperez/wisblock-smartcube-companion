@@ -35,9 +35,9 @@ void cube_time(unsigned long ms);
 unsigned char * cube_cubelets();
 bool cube_updated();
 
-void cube_scramble(Ring * moves, uint8_t size);
+void cube_scramble(uint8_t puzzle, Ring * moves);
 char * cube_turn_text(uint8_t code, bool space = false);
 uint8_t cube_move_reverse(uint8_t move);
-uint8_t cube_move_sum(uint8_t move1, uint8_t move2);
+uint8_t cube_move_sum(uint8_t puzzle, uint8_t move1, uint8_t move2);
 
 #endif // _CUBE_H
