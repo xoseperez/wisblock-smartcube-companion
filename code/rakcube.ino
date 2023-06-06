@@ -13,6 +13,7 @@
 
 unsigned char _last_state = STATE_SLEEPING;
 bool _force_state = false;
+bool _save_solve = true;
 Ring _ring;
 bool _scramble_update = false;
 
@@ -82,7 +83,10 @@ void touch_callback(unsigned char event) {
         }
 
         if (g_state == STATE_SOLVED) {
-            g_state = STATE_USER;
+            if (0 == button) {
+                _save_solve = false;
+                g_state = STATE_USER;
+            }
         }
 
         if (g_state == STATE_TIMER) {
@@ -204,6 +208,7 @@ void touch_callback(unsigned char event) {
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
         }
         if (g_state == STATE_INSPECT) g_state = STATE_USER;
+        if (g_state == STATE_SOLVED) g_state = STATE_USER;
 
     }
 
@@ -401,9 +406,22 @@ void state_machine() {
     bool save_flash = false;
     bool changed_state = (_last_state != g_state) || _force_state;
     _force_state = false;
-    _last_state = g_state;
+    
+    // Handle state exit cases    
+    if ((_last_state != g_state) && (_last_state == STATE_SOLVED)) {
+        if (_save_solve) {
+            unsigned long time = cube_time();
+            unsigned short turns = cube_turns();
+            if (time > 0) {
+                add_solve(g_puzzle, g_user, time, turns);
+                save_flash = true;
+            }
+        }
+        _save_solve = true;
+    }
 
     if (changed_state) {
+        _last_state = g_state;
         last_change = millis();
         #if DEBUG>1
             Serial.printf("[MAIN] State %d, Mode %d\n", g_state, g_mode);
@@ -541,20 +559,13 @@ void state_machine() {
 
         case STATE_SOLVED:
             if (changed_state) {
-
                 unsigned long time = cube_time();
-                unsigned short turns = cube_turns();
                 if (time == 0) {
                     g_state = STATE_2D;
                 } else {
-
-                    add_solve(g_puzzle, g_user, time, turns);
-                    save_flash = true;
-
                     display_page_solved();
                     changed_display = true;
                 }
-
             }
             break;
         

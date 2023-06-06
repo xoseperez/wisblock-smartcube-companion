@@ -12,7 +12,7 @@
 #include "ring.h"
 
 #include "assets/bmp_cube.h"
-#include "assets/puzzles.h"
+#include "assets/icons.h"
 
 Adafruit_ST7789 _display_screen = Adafruit_ST7789(DISPLAY_CS_GPIO, DISPLAY_DC_GPIO, DISPLAY_RST_GPIO);
 GFXcanvas16 _display_canvas = GFXcanvas16(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -65,17 +65,17 @@ static void display_draw_bmp(const GUI_BITMAP *bmp, uint16_t x, uint16_t y, uint
     }
 }
 
-static void display_draw_puzzle(const uint8_t *bmp, uint16_t x, uint16_t y) {
+static void display_draw_icon(const uint8_t *bmp, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     
     uint32_t byte = 0;
     uint8_t bit = 0;
     uint8_t value, pixel;
 
-    for (uint16_t j=0; j<64; j++) {
-        for (uint16_t i=0; i<64; i++) {
+    for (uint16_t j=0; j<h; j++) {
+        for (uint16_t i=0; i<w; i++) {
             if (0 == bit) value = bmp[byte++];
             pixel = (value >> (7-bit)) & 0x01;
-            if (0 == pixel) _display_canvas.drawPixel(x+i-32, y+j-32, 0);
+            if (0 == pixel) _display_canvas.drawPixel(x+i-w/2, y+j-h/2, 0);
             bit = (bit + 1) % 8;
         }
     }
@@ -515,7 +515,7 @@ void display_page_puzzles(uint8_t puzzle) {
         uint8_t x = margin + (margin + width) * (i%3);
         uint8_t y = margin + (margin + height) * ((int) (i/3));
         display_button(i, (char *) "", x, y, width, height, puzzle == i ? ST77XX_GREEN : ST77XX_RED);
-        display_draw_puzzle(pixels[i], x + width/2, y + height / 2);
+        display_draw_icon(pixels[i], x + width/2, y + height / 2, 64, 64);
     }
 
 }
@@ -711,6 +711,9 @@ void display_page_timer() {
 void display_page_solved() {
     display_show_timer();
     display_stats();
+    display_clear_buttons();
+    display_button(0, (char *) "", 10, 10, 40, 40, ST77XX_RED);
+    display_draw_icon(icon_bin, 30, 30, 32, 32);
 }
 
 // ----------------------------------------------------------------------------
