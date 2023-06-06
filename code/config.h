@@ -12,6 +12,7 @@
 #define INTRO_TIMEOUT               5000
 #define WDT_SECONDS                 30
 #define SCRAMBLE_SIZE               20
+#define SCRAMBLE_FRU_ONLY           0
 
 // ----------------------------------------------------------------------------
 // States et al.

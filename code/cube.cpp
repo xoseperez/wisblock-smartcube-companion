@@ -102,6 +102,8 @@ void cube_scramble(Ring * moves, uint8_t size) {
         Serial.print("[CUB] Scramble: ");
     #endif
 
+    uint8_t faces = SCRAMBLE_FRU_ONLY ? 3 : 6;
+
     for (uint8_t i=0; i<size; i++) {
 
         uint8_t face;
@@ -109,7 +111,7 @@ void cube_scramble(Ring * moves, uint8_t size) {
         do {
             
             do {
-                face = random(0, 6);
+                face = random(0, faces);
             } while (face == last_face);
             
             if (last_group == face % 3) {
