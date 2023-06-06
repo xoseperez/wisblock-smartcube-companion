@@ -108,7 +108,7 @@ enum {
 #define REAL_VBAT_MV_PER_LSB        (VBAT_DIVIDER_COMP * VBAT_MV_PER_LSB)
 
 #define BATT_MIN_MV                 3300
-#define BATT_MAX_MV                 4200
+#define BATT_MAX_MV                 4100
 
 #endif // _CONFIG_H
 
