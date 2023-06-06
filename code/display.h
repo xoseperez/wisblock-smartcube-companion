@@ -35,7 +35,7 @@ void display_page_smartcube_connect();
 void display_page_stackmat_connect();
 void display_page_puzzles(uint8_t puzzle);
 void display_page_user(uint8_t puzzle, uint8_t user);
-void display_page_user_confirm_reset(uint8_t user);
+void display_page_user_confirm_reset(uint8_t puzzle, uint8_t user);
 void display_page_2d();
 void display_page_3d();
 void display_page_scramble(Ring * ring);

@@ -613,15 +613,16 @@ void display_page_user(uint8_t puzzle, uint8_t user) {
 
 }
 
-void display_page_user_confirm_reset(uint8_t user) {
+void display_page_user_confirm_reset(uint8_t puzzle, uint8_t user) {
 
     char line[60] = {0};
 
     // Question
     _display_canvas.setTextSize(2);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    snprintf(line, sizeof(line), "RESET STATS FOR USER %d?", user+1);
-    display_text(line, 160, 80, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    display_text("RESET STATS FOR", 160, 65, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    snprintf(line, sizeof(line), "USER %d - %s?", user+1, PUZZLE_NAMES[puzzle]);
+    display_text(line, 160, 85, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
     uint8_t button_width = 100;
     uint8_t button_height = 40;

@@ -516,7 +516,7 @@ void state_machine() {
 
         case STATE_USER_CONFIRM_RESET:
             if (changed_state) {
-                display_page_user_confirm_reset(g_user);
+                display_page_user_confirm_reset(g_puzzle, g_user);
                 changed_display = true;
             }
             break;

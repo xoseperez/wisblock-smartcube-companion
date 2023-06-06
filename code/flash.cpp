@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "flash.h"
 
-#define DO_NOT_SAVE
+//#define DO_NOT_SAVE
 
 using namespace Adafruit_LittleFS_Namespace;
 const char _settings_file_name[] = "rakcube.bin";
