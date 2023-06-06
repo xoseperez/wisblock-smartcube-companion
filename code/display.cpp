@@ -588,15 +588,19 @@ void display_page_user(uint8_t puzzle, uint8_t user) {
 
     // Ao5 & Ao12
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    snprintf(line, sizeof(line), " Ao5   %s    %4d   %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao5.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao5.turns, g_settings.puzzle[puzzle].user[user].ao5.tps / 100.0);
+    snprintf(line, sizeof(line), " Ao5   %s           %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao5.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao5.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
-    snprintf(line, sizeof(line), "Ao12   %s    %4d   %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao12.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao12.turns, g_settings.puzzle[puzzle].user[user].ao12.tps / 100.0);
+    snprintf(line, sizeof(line), "Ao12   %s           %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao12.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao12.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
-    // Last 5
+    // Last 12
     _display_canvas.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
     for (uint8_t i=0; i<12; i++) {
-        snprintf(line, sizeof(line), "%4d   %s    %4d   %5.2f", i+1, utils_time_to_text(g_settings.puzzle[puzzle].user[user].solve[i].time, buffer, false), g_settings.puzzle[puzzle].user[user].solve[i].turns, g_settings.puzzle[puzzle].user[user].solve[i].tps / 100.0);
+        if (g_settings.puzzle[puzzle].user[user].solve[i].turns > 0) {
+            snprintf(line, sizeof(line), "%4d   %s    %4d   %5.2f", i+1, utils_time_to_text(g_settings.puzzle[puzzle].user[user].solve[i].time, buffer, false), g_settings.puzzle[puzzle].user[user].solve[i].turns, g_settings.puzzle[puzzle].user[user].solve[i].tps / 100.0);
+        } else {
+            snprintf(line, sizeof(line), "%4d   %s", i+1, utils_time_to_text(g_settings.puzzle[puzzle].user[user].solve[i].time, buffer, false));
+        }
         display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
     }
 

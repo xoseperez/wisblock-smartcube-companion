@@ -338,36 +338,60 @@ void add_solve(uint8_t puzzle, uint8_t user, uint32_t time, uint16_t turns) {
 
     bool has_avg5 = true;
     bool has_avg12 = true;
+    uint16_t tps = 100 * utils_tps(time, turns);
+    
+    // Time averages
     uint32_t time_sum5 = time;
     uint32_t time_sum5_min = time;
     uint32_t time_sum5_max = time;
     uint32_t time_sum12 = time;
     uint32_t time_sum12_min = time;
     uint32_t time_sum12_max = time;
+    
+    // TPS
+    uint32_t turns_time_sum5 = time;
+    uint32_t turns_time_sum12 = time;
     uint32_t turns_sum5 = turns;
     uint32_t turns_sum12 = turns;
-    uint16_t tps = 100 * utils_tps(time, turns);
+    uint8_t turns_count5 = (turns > 0) ? 1 : 0;
+    uint8_t turns_count12 = turns_count5;
+    
 
     // Move solves
     for (int8_t i=10; i>=0; i--) {
-        if (g_settings.puzzle[puzzle].user[user].solve[i].time > 0) {
-            if (time_sum12_min > g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum12_min = g_settings.puzzle[puzzle].user[user].solve[i].time;
-            if (time_sum12_max < g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum12_max = g_settings.puzzle[puzzle].user[user].solve[i].time;
-            time_sum12 += g_settings.puzzle[puzzle].user[user].solve[i].time;
-            turns_sum12 += g_settings.puzzle[puzzle].user[user].solve[i].turns;
-            if (i<4) {
-                if (time_sum5_min > g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum5_min = g_settings.puzzle[puzzle].user[user].solve[i].time;
-                if (time_sum5_max < g_settings.puzzle[puzzle].user[user].solve[i].time) time_sum5_max = g_settings.puzzle[puzzle].user[user].solve[i].time;
-                time_sum5 += g_settings.puzzle[puzzle].user[user].solve[i].time;
-                turns_sum5 += g_settings.puzzle[puzzle].user[user].solve[i].turns;
+        
+        uint32_t this_time = g_settings.puzzle[puzzle].user[user].solve[i].time;
+        uint32_t this_turns = g_settings.puzzle[puzzle].user[user].solve[i].turns;
+
+        if (this_time > 0) {
+            if (time_sum12_min > this_time) time_sum12_min = this_time;
+            if (time_sum12_max < this_time) time_sum12_max = this_time;
+            time_sum12 += this_time;
+            if (this_turns > 0) {
+                turns_time_sum12 += this_time;
+                turns_sum12 += this_turns;
+                turns_count12++;
             }
+            if (i<4) {
+                if (time_sum5_min > this_time) time_sum5_min = this_time;
+                if (time_sum5_max < this_time) time_sum5_max = this_time;
+                time_sum5 += this_time;
+                if (this_turns > 0) {
+                    turns_time_sum5 += this_time;
+                    turns_sum5 += this_turns;
+                    turns_count5++;
+                }
+            }
+        
         } else {
             has_avg12 = false;
             if (i<4) has_avg5 = false;
         }
-        g_settings.puzzle[puzzle].user[user].solve[i+1].time = g_settings.puzzle[puzzle].user[user].solve[i].time;
-        g_settings.puzzle[puzzle].user[user].solve[i+1].turns = g_settings.puzzle[puzzle].user[user].solve[i].turns;
+
+        g_settings.puzzle[puzzle].user[user].solve[i+1].time = this_time;
+        g_settings.puzzle[puzzle].user[user].solve[i+1].turns = this_turns;
         g_settings.puzzle[puzzle].user[user].solve[i+1].tps = g_settings.puzzle[puzzle].user[user].solve[i].tps;
+
     }
 
     // Save last solve
@@ -387,17 +411,25 @@ void add_solve(uint8_t puzzle, uint8_t user, uint32_t time, uint16_t turns) {
     }
 
     // Save ao5
-    if (has_avg5) {
-        g_settings.puzzle[puzzle].user[user].ao5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
-        g_settings.puzzle[puzzle].user[user].ao5.turns = turns_sum5 / 5;
-        g_settings.puzzle[puzzle].user[user].ao5.tps = 100 * utils_tps(time_sum5, turns_sum5);
+    g_settings.puzzle[puzzle].user[user].ao5.time = 0;
+    g_settings.puzzle[puzzle].user[user].ao5.turns = 0;
+    g_settings.puzzle[puzzle].user[user].ao5.tps = 0;
+
+    if (has_avg5) g_settings.puzzle[puzzle].user[user].ao5.time = (time_sum5 - time_sum5_min - time_sum5_max) / 3;
+    if (turns_count5 > 0) {
+        g_settings.puzzle[puzzle].user[user].ao5.turns = turns_sum5 / turns_count5;
+        g_settings.puzzle[puzzle].user[user].ao5.tps = 100 * utils_tps(turns_time_sum5, turns_sum5);
     }
 
     // Save ao12
-    if (has_avg12) {
-        g_settings.puzzle[puzzle].user[user].ao12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
-        g_settings.puzzle[puzzle].user[user].ao12.turns = turns_sum12 / 12;
-        g_settings.puzzle[puzzle].user[user].ao12.tps = 100 * utils_tps(time_sum12, turns_sum12);
+    g_settings.puzzle[puzzle].user[user].ao12.time = 0;
+    g_settings.puzzle[puzzle].user[user].ao12.turns = 0;
+    g_settings.puzzle[puzzle].user[user].ao12.tps = 0;
+
+    if (has_avg12) g_settings.puzzle[puzzle].user[user].ao12.time = (time_sum12 - time_sum12_min - time_sum12_max) / 10;
+    if (turns_count12 > 0) {
+        g_settings.puzzle[puzzle].user[user].ao12.turns = turns_sum12 / turns_count12;
+        g_settings.puzzle[puzzle].user[user].ao12.tps = 100 * utils_tps(turns_time_sum12, turns_sum12);
     }
 
 }
