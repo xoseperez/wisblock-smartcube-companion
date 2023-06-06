@@ -118,11 +118,9 @@ void cube_scramble(uint8_t puzzle, Ring * moves) {
 
                 face = random(0, 6);
 
-                // For Gi2 we only want ULB
+                // For Gi2 we only want URF
                 if (g_puzzle == PUZZLE_2x2x2) {
-                    if (1 == face) face = 4;
-                    if (2 == face) face = 5;
-                    if (3 == face) face = 0;
+                    if (face > 2) face -= 3;
                 }
 
             } while (face == last_face);
