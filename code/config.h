@@ -11,7 +11,7 @@
 #define CONNECT_TIMEOUT             20000    
 #define INTRO_TIMEOUT               5000
 #define WDT_SECONDS                 30
-#define SCRAMBLE_SIZE               21
+#define SCRAMBLE_SIZE               20
 
 // ----------------------------------------------------------------------------
 // States et al.
