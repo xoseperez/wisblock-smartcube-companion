@@ -97,12 +97,6 @@ void touch_callback(unsigned char event) {
             }
         }
 
-        if (g_state == STATE_INSPECT) {
-            cube_metrics_start(millis());
-            utils_beep();
-            g_state = STATE_TIMER;
-        }
-
         if (g_state == STATE_SCRAMBLE_MANUAL) {
             if (0 == button) g_state = STATE_INSPECT;
         }
@@ -159,10 +153,19 @@ void touch_callback(unsigned char event) {
 
     }
 
+    if (event == TOUCH_EVENT_HOLD) {
+        if (g_state == STATE_INSPECT) g_state = STATE_READY;
+    }
+
     if (event == TOUCH_EVENT_LONG_CLICK) {
         if (g_state == STATE_USER) g_state = STATE_USER_CONFIRM_RESET;
         if (g_state == STATE_2D) cube_reset();
         if (g_state == STATE_3D) cube_reset();
+        if (g_state == STATE_READY) {
+            cube_metrics_start(millis());
+            utils_beep();
+            g_state = STATE_TIMER;
+        }
     }
 
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
@@ -547,7 +550,14 @@ void state_machine() {
 
         case STATE_INSPECT:
             if (changed_state) {
-                display_page_inspect();
+                display_page_inspect(false);
+                changed_display = true;
+            }
+            break;
+
+        case STATE_READY:
+            if (changed_state) {
+                display_page_inspect(true);
                 changed_display = true;
             }
             break;

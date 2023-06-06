@@ -11,6 +11,7 @@ TouchPointType _touch_pointB;
 unsigned char _touch_state = 0;
 unsigned char _touch_event = 0;
 unsigned long _touch_event_start = 0;
+bool _touch_event_hold = false;
 
 static unsigned char _touch_flag = false;
 
@@ -44,8 +45,11 @@ void touch_process(void) {
     // Same state, check for time
     if (newstate == _touch_state) {
         if (_touch_state != 0) {
-            if ((millis() - _touch_event_start) > 1000) {
-                touch_send_event(TOUCH_EVENT_HOLD);
+            if (!_touch_event_hold) {
+                if ((millis() - _touch_event_start) > 1000) {
+                    _touch_event_hold = true;
+                    touch_send_event(TOUCH_EVENT_HOLD);
+                }
             }
         }
     
@@ -55,6 +59,7 @@ void touch_process(void) {
         // click
         if ((_touch_state == 0) && (newstate == 1)) {
             touch_send_event(TOUCH_EVENT_CLICK);
+            _touch_event_hold = false;
             _touch_event_start = millis();
             _touch_pointA.x = _touch_interface.read_touch1_x();
             _touch_pointA.y = _touch_interface.read_touch1_y();

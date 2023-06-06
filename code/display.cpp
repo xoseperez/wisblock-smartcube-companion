@@ -620,7 +620,7 @@ void display_page_user_confirm_reset(uint8_t puzzle, uint8_t user) {
     // Question
     _display_canvas.setTextSize(2);
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    display_text("RESET STATS FOR", 160, 65, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    display_text((char *) "RESET STATS FOR", 160, 65, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     snprintf(line, sizeof(line), "USER %d - %s?", user+1, PUZZLE_NAMES[puzzle]);
     display_text(line, 160, 85, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
@@ -695,13 +695,27 @@ void display_page_scramble_manual(Ring * ring) {
 
 }
 
-void display_page_inspect() {
+void display_page_inspect(bool ready) {
+    
     _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
-    _display_canvas.setTextSize(6);
-    display_text((char *) "INSPECT", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    _display_canvas.setTextSize(2);
+    display_text((char *) "INSPECT", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    _display_canvas.setTextColor(ready ? ST77XX_GREEN : ST77XX_RED, ST77XX_BLACK);
+    _display_canvas.setTextSize(4);
+    display_text((char *) "00:00.000", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(1);
-    display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+30, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    if (g_mode == 0) {
+        display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    } else {
+        display_text((char *) "Hold and release to start timer", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+    }
+
+
     display_stats();
+
 }
 
 void display_page_timer() {
