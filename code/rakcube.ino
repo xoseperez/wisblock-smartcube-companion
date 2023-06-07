@@ -62,6 +62,7 @@ bool scramble_update(uint8_t move) {
 
 void touch_callback(unsigned char event) {
     
+    // button handling
     if (event == TOUCH_EVENT_RELEASE) {
         
         TouchPointType point = touch_pointA();
@@ -98,7 +99,8 @@ void touch_callback(unsigned char event) {
         }
 
         if (g_state == STATE_SCRAMBLE_MANUAL) {
-            if (0 == button) g_state = STATE_INSPECT;
+            //if (0 == button) 
+            g_state = STATE_INSPECT;
         }
 
         if (g_state == STATE_PUZZLES) {
@@ -153,14 +155,19 @@ void touch_callback(unsigned char event) {
 
     }
 
+    // Hold for more than 1s
     if (event == TOUCH_EVENT_HOLD) {
+        if (g_state == STATE_USER) g_state = STATE_USER_CONFIRM_RESET;
         if (g_state == STATE_INSPECT) g_state = STATE_READY;
+        if ((g_state == STATE_2D) || (g_state == STATE_3D)) {
+            cube_reset();
+            utils_beep();
+            _force_state = true;
+        }
     }
 
+    // Start timer on release after hold
     if (event == TOUCH_EVENT_LONG_CLICK) {
-        if (g_state == STATE_USER) g_state = STATE_USER_CONFIRM_RESET;
-        if (g_state == STATE_2D) cube_reset();
-        if (g_state == STATE_3D) cube_reset();
         if (g_state == STATE_READY) {
             cube_metrics_start(millis());
             utils_beep();
@@ -168,6 +175,7 @@ void touch_callback(unsigned char event) {
         }
     }
 
+    // Swipe down means discard current action
     if (event == TOUCH_EVENT_SWIPE_DOWN) {
         if (g_state == STATE_SCRAMBLE) g_state = STATE_USER;
         if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
@@ -175,6 +183,7 @@ void touch_callback(unsigned char event) {
         if (g_state == STATE_TIMER) g_state = STATE_USER;
     }
 
+    // Move forward (config->puzzles->user->2D->3D->scramble->inspect->timer->solved->user)
     if (event == TOUCH_EVENT_SWIPE_LEFT) {
 
         if (g_mode == MODE_SMARTCUBE) {
@@ -197,6 +206,7 @@ void touch_callback(unsigned char event) {
 
     }
 
+    // Move backward (solved->inspect->scramble->3d->2d->user->puzzles->config)
     if (event == TOUCH_EVENT_SWIPE_RIGHT) {
 
         if (g_state == STATE_PUZZLES) g_state = STATE_CONFIG;
