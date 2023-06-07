@@ -493,13 +493,17 @@ void display_page_intro() {
 
 void display_page_config(uint8_t mode) {
 
+
     uint16_t margin = 10;
-    uint16_t height = (DISPLAY_HEIGHT - 5 * margin) / 4;
+    uint16_t height = (DISPLAY_HEIGHT - 3 * margin) / 2;
+    uint16_t width = (DISPLAY_WIDTH - 4 * margin) / 3;
 
     display_clear_buttons();
-    _display_canvas.setTextSize(2);
     for (uint8_t i=0; i<4; i++) {
-        display_button(i, (char *) DISPLAY_CONFIG_BUTTONS[i], margin, margin + (height + margin) * i, DISPLAY_WIDTH - 2 * margin, height, mode == i ? ST77XX_GREEN : ST77XX_RED);
+        uint8_t x = margin + (margin + width) * (i%3);
+        uint8_t y = margin + (margin + height) * ((int) (i/3));
+        display_button(i, (char *) "", x, y, width, height, mode == i ? ST77XX_GREEN : ST77XX_RED);
+        display_draw_icon(config_icons[i], x + width/2, y + height / 2, 64, 64);
     }
 
 }
@@ -515,7 +519,7 @@ void display_page_puzzles(uint8_t puzzle) {
         uint8_t x = margin + (margin + width) * (i%3);
         uint8_t y = margin + (margin + height) * ((int) (i/3));
         display_button(i, (char *) "", x, y, width, height, puzzle == i ? ST77XX_GREEN : ST77XX_RED);
-        display_draw_icon(pixels[i], x + width/2, y + height / 2, 64, 64);
+        display_draw_icon(puzzle_icons[i], x + width/2, y + height / 2, 64, 64);
     }
 
 }
