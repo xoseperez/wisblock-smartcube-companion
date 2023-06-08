@@ -160,7 +160,7 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
 void ganv2_data_send(uint8_t* data, uint16_t len) {
 
     #if DEBUG > 1
-        Serial.printf("[GAN] Sending: ");
+        Serial.printf("[GAN] Sending: 0x");
         for (uint16_t i=0; i<len; i++) {
             Serial.printf("%02X", data[i]);
         }

@@ -204,7 +204,9 @@ void bluetooth_setup() {
     // Initialize Bluefruit with maximum connections as Peripheral = 0, Central = 1
     // SRAM usage required by SoftDevice will increase dramatically with number of connections
     Bluefruit.begin(0, 1);
-    Bluefruit.setTxPower(BLE_TX_POWER);    // Check bluefruit.h for supported values
+    Bluefruit.setTxPower(BLE_TX_POWER);
+    Bluefruit.configCentralBandwidth(BANDWIDTH_NORMAL);  
+    Bluefruit.configAttrTableSize(BLE_GATTS_ATTR_TAB_SIZE_DEFAULT);
 
     // Get BLE address
     uint32_t addr_high = ((MAC_ADDRESS_HIGH) & 0x0000ffff) | 0x0000c000;

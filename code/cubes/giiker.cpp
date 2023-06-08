@@ -167,7 +167,7 @@ void giiker_rw_callback(uint8_t* data, uint16_t len) {
 void giiker_data_send(uint8_t* data, uint16_t len) {
 
     #if DEBUG > 1
-        Serial.printf("[GII] Sending: ");
+        Serial.printf("[GII] Sending: 0x");
         for (uint16_t i=0; i<len; i++) {
             Serial.printf("%02X", data[i]);
         }

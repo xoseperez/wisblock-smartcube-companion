@@ -119,7 +119,7 @@ void flash_load() {
         }
     }
 
-    flash_dump();
+    //flash_dump();
 
 }
 

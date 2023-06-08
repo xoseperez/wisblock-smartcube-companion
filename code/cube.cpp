@@ -5,6 +5,7 @@
 #include "ring.h"
 #include "cubes/ganv2.h"
 #include "cubes/giiker.h"
+#include "cubes/gocube.h"
 
 // state
 uint8_t _cube_cubelets[55] = {0};
@@ -65,6 +66,7 @@ bool cube_bind(uint8_t conn_handle) {
     _cube_connected = false;
     _cube_connected = _cube_connected || ganv2_start(conn_handle);
     _cube_connected = _cube_connected || giiker_start(conn_handle);
+    _cube_connected = _cube_connected || gocube_start(conn_handle);
 
     if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_CONNECTED, nullptr);
     return _cube_connected;
@@ -82,6 +84,7 @@ void cube_unbind() {
 void cube_setup() {
     ganv2_init();
     giiker_init();
+    gocube_init();
     randomSeed(analogRead(WB_A1));
 }
 
@@ -299,6 +302,19 @@ void cube_move(uint8_t face, uint8_t count) {
         Serial.println();
     #endif
     
+}
+
+void cube_state(unsigned char * cubelets, unsigned char len) {
+
+    memcpy(_cube_cubelets, cubelets, len);
+    _cube_cubelets[len] = 0;
+    
+    #if DEBUG>1
+        Serial.printf("[CUB] State: %s\n", _cube_cubelets);
+    #endif
+
+    _cube_updated = true;
+
 }
 
 void cube_state(uint8_t * corners, uint8_t * edges, const unsigned char cfacelet[8][3], const unsigned char efacelet[12][2]) {
