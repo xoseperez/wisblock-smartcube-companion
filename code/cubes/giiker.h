@@ -1,6 +1,7 @@
 #ifndef _GIIKER_H
 #define _GIIKER_H
 
+#define GIIKER_RESET 0xA1
 #define GIIKER_GET_BATTERY 0xB5
 #define GIIKER_GET_FIRMWARE 0xB7
 #define GIIKER_GET_MOVES 0xCC

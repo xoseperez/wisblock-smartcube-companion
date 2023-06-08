@@ -187,6 +187,10 @@ void giiker_battery() {
     giiker_data_send(GIIKER_GET_BATTERY);    
 }
 
+void giiker_reset() {
+    giiker_data_send(GIIKER_RESET);    
+}
+
 // ----------------------------------------------------------------------------
 // Bluetooth
 // ----------------------------------------------------------------------------
@@ -282,7 +286,7 @@ bool giiker_start(uint16_t conn_handle) {
     }
     
     // Register callbacks
-    cube_set_cube_callbacks(giiker_battery, nullptr);
+    cube_set_cube_callbacks(giiker_battery, giiker_reset);
 
     return true;
     
