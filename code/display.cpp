@@ -31,6 +31,13 @@ s_button _display_buttons[10];
 uint8_t _display_buttons_count = 0;
 extern uint8_t g_puzzle;
 
+int16_t display_points_2x2x2[12][4][3] = {0};
+int16_t display_points_3x3x3[27][4][3] = {0};
+float display_matrix[3][3] = {0};
+float display_angle_alpha = 150.0 * PI / 180.0; // z axis
+float display_angle_beta = 180.0 * PI / 180.0; // y axis
+float display_angle_gamma = 20.0 * PI / 180.0; // x axis
+
 const char * PUZZLE_NAMES[6] = {
     "3x3x3",
     "2x2x2",
@@ -81,58 +88,7 @@ static void display_draw_icon(const uint8_t *bmp, uint16_t x, uint16_t y, uint16
     }
 }
 
-int16_t display_points[27][4][3] = {0};
-float display_matrix[3][3] = {0};
-float display_angle_alpha = 150.0 * PI / 180.0; // z axis
-float display_angle_beta = 180.0 * PI / 180.0; // y axis
-float display_angle_gamma = 20.0 * PI / 180.0; // x axis
-
-void display_update_3x3x3_3d_init() {
-
-    uint8_t index = 0;
-    int16_t x, y, z;
-    int16_t size = 40;
-    int16_t gap = 8;
-    int16_t start = 1.5 * size + gap;
-    
-    // white face
-    x = -start;
-    y = -start;
-    z = start + gap / 2;
-    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
-        for (uint8_t k=0; k<4; k++) {
-            display_points[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
-            display_points[index][k][1] = y + i * (size + gap) + ((k == 2 || k == 3) ? size : 0);
-            display_points[index][k][2] = z;
-        }
-        index++;
-    }
-
-    // red face
-    x = start + gap / 2;
-    y = start;
-    z = start;
-    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
-        for (uint8_t k=0; k<4; k++) {
-            display_points[index][k][0] = x;
-            display_points[index][k][1] = y - j * (size + gap) - ((k == 1 || k == 2) ? size : 0);
-            display_points[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
-        }
-        index++;
-    }
-
-    // green face
-    x = -start;
-    y = start + gap / 2;
-    z = start;
-    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
-        for (uint8_t k=0; k<4; k++) {
-            display_points[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
-            display_points[index][k][1] = y;
-            display_points[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
-        }
-        index++;
-    }
+void display_update_3d_init() {
 
     // Calculate angles
     float sin_alpha = sin(display_angle_alpha);
@@ -155,7 +111,146 @@ void display_update_3x3x3_3d_init() {
 
 }
 
-void display_update_cube_3d() {
+void display_update_2x2x2_3d_init() {
+
+    uint8_t index = 0;
+    int16_t x, y, z;
+    int16_t size = 40;
+    int16_t gap = 8;
+    int16_t start = size + gap / 2;
+    
+    // white face
+    x = -start;
+    y = -start;
+    z = start + gap / 2;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points_2x2x2[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
+            display_points_2x2x2[index][k][1] = y + i * (size + gap) + ((k == 2 || k == 3) ? size : 0);
+            display_points_2x2x2[index][k][2] = z;
+        }
+        index++;
+    }
+
+    // red face
+    x = start + gap / 2;
+    y = start;
+    z = start;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points_2x2x2[index][k][0] = x;
+            display_points_2x2x2[index][k][1] = y - j * (size + gap) - ((k == 1 || k == 2) ? size : 0);
+            display_points_2x2x2[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
+        }
+        index++;
+    }
+
+    // green face
+    x = -start;
+    y = start + gap / 2;
+    z = start;
+    for (uint8_t i=0; i<2; i++) for (uint8_t j=0; j<2; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points_2x2x2[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
+            display_points_2x2x2[index][k][1] = y;
+            display_points_2x2x2[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
+        }
+        index++;
+    }
+
+}
+
+void display_update_3x3x3_3d_init() {
+
+    uint8_t index = 0;
+    int16_t x, y, z;
+    int16_t size = 40;
+    int16_t gap = 8;
+    int16_t start = 1.5 * size + gap;
+    
+    // white face
+    x = -start;
+    y = -start;
+    z = start + gap / 2;
+    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points_3x3x3[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
+            display_points_3x3x3[index][k][1] = y + i * (size + gap) + ((k == 2 || k == 3) ? size : 0);
+            display_points_3x3x3[index][k][2] = z;
+        }
+        index++;
+    }
+
+    // red face
+    x = start + gap / 2;
+    y = start;
+    z = start;
+    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points_3x3x3[index][k][0] = x;
+            display_points_3x3x3[index][k][1] = y - j * (size + gap) - ((k == 1 || k == 2) ? size : 0);
+            display_points_3x3x3[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
+        }
+        index++;
+    }
+
+    // green face
+    x = -start;
+    y = start + gap / 2;
+    z = start;
+    for (uint8_t i=0; i<3; i++) for (uint8_t j=0; j<3; j++) {
+        for (uint8_t k=0; k<4; k++) {
+            display_points_3x3x3[index][k][0] = x + j * (size + gap) + ((k == 1 || k == 2) ? size : 0);
+            display_points_3x3x3[index][k][1] = y;
+            display_points_3x3x3[index][k][2] = z - i * (size + gap) - ((k == 2 || k == 3) ? size : 0);
+        }
+        index++;
+    }
+
+}
+
+void display_update_2x2x2_3d() {
+
+    // Get cubelets
+    unsigned char * cubelets = cube_cubelets();
+    Serial.println((char *) cubelets);
+
+    // translate cubelets to _cube_colors
+    uint8_t cc[12] = {0};
+    for (uint8_t i=0; i<12; i++) {
+      if (cubelets[i] == 'U') cc[i] = 0;
+      if (cubelets[i] == 'R') cc[i] = 1;
+      if (cubelets[i] == 'F') cc[i] = 2;
+      if (cubelets[i] == 'D') cc[i] = 3;
+      if (cubelets[i] == 'L') cc[i] = 4;
+      if (cubelets[i] == 'B') cc[i] = 5;
+    }
+
+    int16_t points[4][3];
+    int16_t offset[3] = { DISPLAY_WIDTH / 2 - 35, DISPLAY_HEIGHT / 2, DISPLAY_HEIGHT / 2};
+
+    for (uint8_t cubelet=0; cubelet<12; cubelet++) {
+        
+        // Rotate points
+        for (uint8_t vertex=0; vertex<4; vertex++) {
+            for (uint8_t coordinate=0; coordinate<3; coordinate++) {
+                points[vertex][coordinate] = 
+                    display_matrix[0][coordinate] * display_points_2x2x2[cubelet][vertex][0] +
+                    display_matrix[1][coordinate] * display_points_2x2x2[cubelet][vertex][1] +
+                    display_matrix[2][coordinate] * display_points_2x2x2[cubelet][vertex][2] +
+                    offset[coordinate];
+            }
+        }
+
+        // Show cubelet
+        _display_canvas.fillTriangle(points[0][0], points[0][2], points[1][0], points[1][2], points[2][0], points[2][2], _cube_colors[cc[cubelet]]);
+        _display_canvas.fillTriangle(points[0][0], points[0][2], points[2][0], points[2][2], points[3][0], points[3][2], _cube_colors[cc[cubelet]]);
+
+    }
+
+}
+
+void display_update_3x3x3_3d() {
 
     // Get cubelets
     unsigned char * cubelets = cube_cubelets();
@@ -172,7 +267,7 @@ void display_update_cube_3d() {
     }
 
     int16_t points[4][3];
-    int16_t offset[3] = { DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, DISPLAY_HEIGHT / 2};
+    int16_t offset[3] = { DISPLAY_WIDTH / 2 - 35, DISPLAY_HEIGHT / 2, DISPLAY_HEIGHT / 2};
 
     for (uint8_t cubelet=0; cubelet<27; cubelet++) {
         
@@ -180,9 +275,9 @@ void display_update_cube_3d() {
         for (uint8_t vertex=0; vertex<4; vertex++) {
             for (uint8_t coordinate=0; coordinate<3; coordinate++) {
                 points[vertex][coordinate] = 
-                    display_matrix[0][coordinate] * display_points[cubelet][vertex][0] +
-                    display_matrix[1][coordinate] * display_points[cubelet][vertex][1] +
-                    display_matrix[2][coordinate] * display_points[cubelet][vertex][2] +
+                    display_matrix[0][coordinate] * display_points_3x3x3[cubelet][vertex][0] +
+                    display_matrix[1][coordinate] * display_points_3x3x3[cubelet][vertex][1] +
+                    display_matrix[2][coordinate] * display_points_3x3x3[cubelet][vertex][2] +
                     offset[coordinate];
             }
         }
@@ -558,7 +653,11 @@ void display_page_2d() {
 }
 
 void display_page_3d() {
-    display_update_cube_3d();
+    if (g_puzzle == PUZZLE_3x3x3) {
+        display_update_3x3x3_3d();
+    } else {
+        display_update_2x2x2_3d();
+    }
     display_stats();
 }
 
@@ -777,6 +876,8 @@ void display_setup(void) {
     _display_screen.init(DISPLAY_HEIGHT, DISPLAY_WIDTH); // reversed
     _display_screen.setRotation(3);
 
+    display_update_3d_init();
+    display_update_2x2x2_3d_init();
     display_update_3x3x3_3d_init();
 
     #if DEBUG > 0

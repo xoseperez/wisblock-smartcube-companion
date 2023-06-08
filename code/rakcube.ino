@@ -188,13 +188,7 @@ void touch_callback(unsigned char event) {
 
         if (g_mode == MODE_SMARTCUBE) {
             if (g_state == STATE_3D) g_state = STATE_SCRAMBLE;
-            if (g_state == STATE_2D) {
-                if (g_puzzle == PUZZLE_3x3x3) {
-                    g_state = STATE_3D;
-                } else {
-                    g_state = STATE_SCRAMBLE;
-                }
-            }
+            if (g_state == STATE_2D) g_state = STATE_3D;
             if (g_state == STATE_USER) g_state = STATE_2D;
             if (g_state == STATE_CONFIG) g_state = STATE_USER;
         } else {
@@ -214,13 +208,7 @@ void touch_callback(unsigned char event) {
             if (g_state == STATE_USER) g_state = STATE_CONFIG;
             if (g_state == STATE_2D) g_state = STATE_USER;
             if (g_state == STATE_3D) g_state = STATE_2D;
-            if (g_state == STATE_SCRAMBLE) {
-                if (g_puzzle == PUZZLE_3x3x3) {
-                    g_state = STATE_3D;
-                } else {
-                    g_state = STATE_2D;
-                }
-            }
+            if (g_state == STATE_SCRAMBLE) g_state = STATE_3D;
         } else {
             if (g_state == STATE_USER) g_state = STATE_PUZZLES;
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
