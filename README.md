@@ -1,23 +1,23 @@
 # WisBlock Smart Cube Companion
 
-This repository holds the code for the WisBlock Smart Cube Companion. A BLE device to be used with Smart Magic Cubes like GAN 356 i3, Giiker and Xiaomi cubes.
+This repository holds the code for the WisBlock Smart Cube Companion. A BLE device to be used with Smart Magic Cubes like GAN 356 i3, GoCube, Giiker and Xiaomi cubes, that also suppoprts Stackmat connection or good old fingertip start/stop.
 
 ![WisBlock Smart Cube Companion](images/20230527_090751x.jpg)
 
 ## Features
 
-* Support for GAN and Giiker smart cubes (tested with GAN 356 i3 and original Giiker cubes)
+* Support for GAN, Giiker i3, Giiker i2 and GoCube smart cubes (tested with GAN 356 i3, original Giiker cubes and GoCubeX cube)
 * Support for StackMat
 * Support for manual interface (swipe to move from menu to menu, tap to start/stop timer)
 * Cube actions
     * 4U to go to scramble page, 4U again to start inspect without scrambling
     * Any movement after solving the cube to see stats
-* Stores statistics for 4 different users (PB, Ao5, Ao12 and last 12 individual solves)
-* Reset user stats (long tap on the screen while at the user's stat page)
+* Stores statistics for 4 different users (PB, Ao5, Ao12 and last 12 individual solves) and 6 different puzzles (3x3x3, 2x2x2, Pyraminx, Skweb, Megaminx and Megaminx2)
+* Reset user/puzzle stats (long tap on the screen while at the user's stat page)
 * Colorful interface
 * Touchscreen for user interaction
 * Visual representation of the cube state in 2D and 3D (only for smart cubes)
-* 21 movements scramble generation following WCA rules
+* 20 movements scramble generation (9 movements for 2x2x2) following WCA rules
 * Automatic start/stop timer for smart cubes
 * Built-in LiPo battery for several hours of usage
 
@@ -32,12 +32,13 @@ These are the components required for this project:
 * Custom 3D printed enclosure (soon available for purchase)
 * Small LiPo battery (I'm using a 1000 mAh nominal)
 
-The whole list is between $60 and $70 at the moment (but you should also consider shipping and customs costs). On top of that you will need a smart cube if you want to use the smart cube link. Mind right now it only supports GAN and Giiker/Xiami cubes like these ones (these are affiliate links):
+The whole list is between $60 and $70 at the moment (but you should also consider shipping and customs costs). On top of that you will need a smart cube if you want to use the smart cube link. Mind right now it only supports GAN, GoCube and Giiker/Xiami cubes like these ones (these are affiliate links):
 
-* [Giiker Electronic Bluetooth Smart Cube](https://s.click.aliexpress.com/e/_Dm1GTOV)
-* [XiaoMi Bluetooth Magic Cube](https://s.click.aliexpress.com/e/_DFSlXJR)
 * [GAN 356 i3 3x3 Magnetic Magic Cube](https://s.click.aliexpress.com/e/_DejEzdL)
 * [GAN i3 Carry Smart Magic Cube](https://s.click.aliexpress.com/e/_DeeLuhR)
+* [Giiker Electronic Bluetooth Smart Cube](https://s.click.aliexpress.com/e/_Dm1GTOV)
+* [Giiker i2 Smart Cube](https://s.click.aliexpress.com/e/_Dc6QohF)
+* [XiaoMi Bluetooth Magic Cube](https://s.click.aliexpress.com/e/_DFSlXJR)
 
 Or you can use a StackMat like the [QiYi Timer Magic Cube Speed Timer](https://s.click.aliexpress.com/e/_DlMhpDL) (also affiliate link) with a regular cube.
 
