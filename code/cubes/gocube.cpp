@@ -53,7 +53,7 @@ void gocube_data_callback(uint8_t* data, uint16_t len) {
     // Cube state
     } else if (2 == mode) { 
 
-        unsigned char facelet[54] = {0};
+        char facelet[55] = {0};
 
         for (uint8_t a=0; a<6; a++) {
             unsigned char axis = GOCUBE_AXIS_PERM[a] * 9;
@@ -64,8 +64,8 @@ void gocube_data_callback(uint8_t* data, uint16_t len) {
             }
         }
 
-        // Solved?
-        //cube_solved(cube_corners, cube_edges);
+        // Solved
+        cube_solved(facelet);
 
         // State
         cube_state(facelet, 54);

@@ -29,6 +29,7 @@ void (*_cube_battery_callback)();
 static const char CUBE_FACES[] = "URFDLB";
 static const uint8_t CUBE_SOLVED_CORNERS[] = {0, 1, 2, 3, 4, 5, 6, 7};
 static const uint8_t CUBE_SOLVED_EDGES[] = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22};
+static const char * CUBE_SOLVED_FACELET_3x3x3 = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 static const unsigned char CUBE_SCRAMBLE_SIZES[] = { 20, 9, 0, 0, 0, 0};
 
 extern uint8_t g_puzzle;
@@ -253,6 +254,22 @@ void cube_set_cube_callbacks(void (*_battery)(void), void (*_reset)(void)) {
     if (_cube_battery_callback) _cube_battery_callback();
 }
 
+bool cube_solved(char * facelet) {
+    
+    bool solved = false;
+
+    if (g_puzzle == PUZZLE_3x3x3) {
+        solved = (strcmp(CUBE_SOLVED_FACELET_3x3x3, facelet) == 0);
+    }
+
+    if (solved) {
+        if (_cube_callback) _cube_callback(CUBE_EVENT_SOLVED, nullptr);
+    }
+
+    return solved;
+
+}
+
 bool cube_solved(uint8_t * corners, uint8_t * edges) {
 
     bool solved = (memcmp(CUBE_SOLVED_CORNERS, corners, 8) == 0);
@@ -304,11 +321,11 @@ void cube_move(uint8_t face, uint8_t count) {
     
 }
 
-void cube_state(unsigned char * cubelets, unsigned char len) {
+void cube_state(char * cubelets, unsigned char len) {
 
     memcpy(_cube_cubelets, cubelets, len);
     _cube_cubelets[len] = 0;
-    
+
     #if DEBUG>1
         Serial.printf("[CUB] State: %s\n", _cube_cubelets);
     #endif

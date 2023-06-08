@@ -11,9 +11,10 @@ enum {
     CUBE_EVENT_DISCONNECTED
 };
 
+bool cube_solved(char * facelet);
 bool cube_solved(uint8_t * corners, uint8_t * edges);
 void cube_move(uint8_t face, uint8_t count);
-void cube_state(unsigned char * cubelets, unsigned char len);
+void cube_state(char * cubelets, unsigned char len);
 void cube_state(uint8_t * corners, uint8_t * edges, const unsigned char cfacelet[8][3], const unsigned char efacelet[12][2]);
 void cube_set_cube_callbacks(void (*)(void), void (*)(void));
 
