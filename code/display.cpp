@@ -14,6 +14,8 @@
 #include "assets/bmp_cube.h"
 #include "assets/icons.h"
 
+#define ST77XX_DARKGREEN 0x0480
+
 Adafruit_ST7789 _display_screen = Adafruit_ST7789(DISPLAY_CS_GPIO, DISPLAY_DC_GPIO, DISPLAY_RST_GPIO);
 GFXcanvas16 _display_canvas = GFXcanvas16(DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -58,6 +60,13 @@ const char * DISPLAY_CONFIG_BUTTONS[] = {
 // ----------------------------------------------------------------------------
 // Private
 // ----------------------------------------------------------------------------
+
+uint16_t display_altcolor(uint16_t color) {
+  uint8_t red = ((color & 0xF800) >> 8);
+  uint8_t green = ((color & 0x07E0) >> 3);
+  uint8_t blue = ((color & 0x001F) << 3);
+  return _display_screen.color565(red | 0x3F, green | 0x3F, blue | 0x3F);
+}
 
 static void display_draw_bmp(const GUI_BITMAP *bmp, uint16_t x, uint16_t y, uint16_t transparent, uint8_t step) {
     uint32_t index = 0;
@@ -478,7 +487,7 @@ void display_stats() {
     _display_canvas.setTextSize(1);
 
     sprintf(buffer, "USER %d", g_user+1);
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     display_text(buffer, 310, y+=10, DISPLAY_ALIGN_RIGHT);
     display_text((char *) PUZZLE_NAMES[g_puzzle], 310, y+=10, DISPLAY_ALIGN_RIGHT);
 
@@ -517,7 +526,7 @@ void display_show_timer() {
     char buffer[30] = {0};
 
     utils_time_to_text(time, buffer, true);
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(4);
     display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
      
@@ -544,6 +553,7 @@ void display_clear_buttons() {
 void display_button(uint8_t id, char * text, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t buttoncolor, uint32_t textcolor) {
 
     // Draw button
+    _display_canvas.fillRoundRect(x+2, y+2, w, h, 5, display_altcolor(buttoncolor));
     _display_canvas.fillRoundRect(x, y, w, h, 5, buttoncolor);
     _display_canvas.setTextColor(textcolor, buttoncolor);
     display_text(text, x + w / 2, y + h / 2, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
@@ -597,7 +607,7 @@ void display_page_config(uint8_t mode) {
     for (uint8_t i=0; i<4; i++) {
         uint8_t x = margin + (margin + width) * (i%3);
         uint8_t y = margin + (margin + height) * ((int) (i/3));
-        display_button(i, (char *) "", x, y, width, height, mode == i ? ST77XX_GREEN : ST77XX_RED);
+        display_button(i, (char *) "", x, y, width, height, mode == i ? ST77XX_DARKGREEN : ST77XX_RED);
         display_draw_icon(config_icons[i], x + width/2, y + height / 2, 64, 64);
     }
 
@@ -613,7 +623,7 @@ void display_page_puzzles(uint8_t puzzle) {
     for (uint8_t i=0; i<6; i++) {
         uint8_t x = margin + (margin + width) * (i%3);
         uint8_t y = margin + (margin + height) * ((int) (i/3));
-        display_button(i, (char *) "", x, y, width, height, puzzle == i ? ST77XX_GREEN : ST77XX_RED);
+        display_button(i, (char *) "", x, y, width, height, puzzle == i ? ST77XX_DARKGREEN : ST77XX_RED);
         display_draw_icon(puzzle_icons[i], x + width/2, y + height / 2, 64, 64);
     }
 
@@ -623,7 +633,7 @@ void display_page_smartcube_connect() {
     
     display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 0, 2);
 
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
     display_text((char *) "PAIRING...", 160, 40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     _display_canvas.setTextSize(1);
@@ -635,7 +645,7 @@ void display_page_stackmat_connect() {
     
     display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 0, 2);
 
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
     display_text((char *) "LISTENING...", 160, 40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     _display_canvas.setTextSize(1);
@@ -670,7 +680,7 @@ void display_page_user(uint8_t puzzle, uint8_t user) {
     char buffer[30] = {0};
 
     _display_canvas.setTextSize(2);
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     snprintf(line, sizeof(line), "USER %d - %s", user+1, PUZZLE_NAMES[puzzle]);
     display_text(line, 100+x, y, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_TOP);
     y+=20;
@@ -690,7 +700,7 @@ void display_page_user(uint8_t puzzle, uint8_t user) {
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
 
     // Ao5 & Ao12
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     snprintf(line, sizeof(line), " Ao5   %s           %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao5.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao5.tps / 100.0);
     display_text(line, x, y+=step_y, DISPLAY_ALIGN_LEFT | DISPLAY_ALIGN_TOP);
     snprintf(line, sizeof(line), "Ao12   %s           %5.2f", utils_time_to_text(g_settings.puzzle[puzzle].user[user].ao12.time, buffer, false), g_settings.puzzle[puzzle].user[user].ao12.tps / 100.0);
@@ -714,7 +724,7 @@ void display_page_user(uint8_t puzzle, uint8_t user) {
     display_clear_buttons();
     for (uint8_t i=0; i<4; i++) {
         snprintf(line, sizeof(line), "%d", i+1);
-        display_button(i, line, DISPLAY_WIDTH - margin - size, margin + (size + margin) * i, size, size, user == i ? ST77XX_GREEN : ST77XX_RED);
+        display_button(i, line, DISPLAY_WIDTH - margin - size, margin + (size + margin) * i, size, size, user == i ? ST77XX_DARKGREEN : ST77XX_RED);
     }
 
 
@@ -726,7 +736,7 @@ void display_page_user_confirm_reset(uint8_t puzzle, uint8_t user) {
 
     // Question
     _display_canvas.setTextSize(2);
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     display_text((char *) "RESET STATS FOR", 160, 65, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
     snprintf(line, sizeof(line), "USER %d - %s?", user+1, PUZZLE_NAMES[puzzle]);
     display_text(line, 160, 85, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
@@ -738,7 +748,7 @@ void display_page_user_confirm_reset(uint8_t puzzle, uint8_t user) {
     // Buttons
     display_clear_buttons();
     display_button(0, (char *) "YES", (DISPLAY_WIDTH - button_separation) / 2 - button_width, 120, button_width, button_height, ST77XX_RED);
-    display_button(1, (char *) "NO", (DISPLAY_WIDTH + button_separation) / 2, 120, button_width, button_height, ST77XX_GREEN);
+    display_button(1, (char *) "NO", (DISPLAY_WIDTH + button_separation) / 2, 120, button_width, button_height, ST77XX_DARKGREEN);
 
 }
 
@@ -746,7 +756,7 @@ void display_page_scramble(Ring * ring) {
 
     char buffer[20];
 
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
 
     _display_canvas.setTextSize(2);
     display_text((char *) "SCRAMBLE", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-50, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
@@ -770,7 +780,7 @@ void display_page_scramble_manual(Ring * ring) {
     uint16_t y = 10;
     uint16_t h;
 
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
     y = display_text((char *) "SCRAMBLE", x, y);
 
@@ -796,7 +806,7 @@ void display_page_scramble_manual(Ring * ring) {
     // Buttons
     display_clear_buttons();
     _display_canvas.setTextSize(2);
-    display_button(0, (char *) "DONE", (DISPLAY_WIDTH - 100) / 2, 180, 100, 40, ST77XX_GREEN);
+    display_button(0, (char *) "DONE", (DISPLAY_WIDTH - 100) / 2, 180, 100, 40, ST77XX_DARKGREEN);
 
     display_stats();
 
@@ -804,15 +814,15 @@ void display_page_scramble_manual(Ring * ring) {
 
 void display_page_inspect(bool ready) {
     
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(2);
     display_text((char *) "INSPECT", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-40, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
-    _display_canvas.setTextColor(ready ? ST77XX_GREEN : ST77XX_RED, ST77XX_BLACK);
+    _display_canvas.setTextColor(ready ? ST77XX_DARKGREEN : ST77XX_RED, ST77XX_BLACK);
     _display_canvas.setTextSize(4);
     display_text((char *) "00:00.000", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-10, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
 
-    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
     _display_canvas.setTextSize(1);
     if (g_mode == 0) {
         display_text((char *) "Timer will start with first move", DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
