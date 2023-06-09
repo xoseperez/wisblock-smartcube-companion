@@ -6,17 +6,15 @@ This repository holds the code for the WisBlock Smart Cube Companion. A BLE devi
 
 ## Features
 
-* Support for GAN, Giiker i3, Giiker i2 and GoCube smart cubes (tested with GAN 356 i3, original Giiker cubes and GoCubeX cube)
-* Support for StackMat
+* Support for GAN, Giiker i3, Giiker i2 and GoCube smart cubes (tested with GAN 356 i3, original Giiker cubes and GoCubeX cube). Should work with Xiaomi (Giiker), Monster (GAN) and Rubik's Connected (GoCube) cubes as well.
+* Support for StackMat timer using an stereo male-to-male audio cable.
 * Support for manual interface (swipe to move from menu to menu, tap to start/stop timer)
 * Cube actions
     * 4U to go to scramble page, 4U again to start inspect without scrambling
     * Any movement after solving the cube to see stats
 * Stores statistics for 4 different users (PB, Ao5, Ao12 and last 12 individual solves) and 6 different puzzles (3x3x3, 2x2x2, Pyraminx, Skweb, Megaminx and Megaminx2)
 * Reset user/puzzle stats (long tap on the screen while at the user's stat page)
-* Colorful interface
-* Touchscreen for user interaction
-* Visual representation of the cube state in 2D and 3D (only for smart cubes)
+* Visual representation of the cube state in 2D and 3D (only for smart 3x3x3 and 2x2x2 cubes)
 * 20 movements scramble generation (9 movements for 2x2x2) following WCA rules
 * Automatic start/stop timer for smart cubes
 * Built-in LiPo battery for several hours of usage
@@ -36,9 +34,12 @@ The whole list is between $60 and $70 at the moment (but you should also conside
 
 * [GAN 356 i3 3x3 Magnetic Magic Cube](https://s.click.aliexpress.com/e/_DejEzdL)
 * [GAN i3 Carry Smart Magic Cube](https://s.click.aliexpress.com/e/_DeeLuhR)
-* [Giiker Electronic Bluetooth Smart Cube](https://s.click.aliexpress.com/e/_Dm1GTOV)
+* [Giiker i3 Smart Cube](https://s.click.aliexpress.com/e/_Dm1GTOV)
 * [Giiker i2 Smart Cube](https://s.click.aliexpress.com/e/_Dc6QohF)
 * [XiaoMi Bluetooth Magic Cube](https://s.click.aliexpress.com/e/_DFSlXJR)
+* [GoCube Connected](https://www.amazon.com/GoCube-Connected-Smart-Rubiks-Puzzle/dp/B07W7TGWDR?&_encoding=UTF8&tag=tinkerman-20&linkCode=ur2&linkId=619d85cd2449e10d1af4930c428be56e&camp=1789&creative=9325)
+* [Rubik's Connected](https://www.amazon.com/Rubiks-Connected-Electronic-App-Enabled-Capabilities/dp/B08JYVKJTG?&_encoding=UTF8&tag=tinkerman-20&linkCode=ur2&linkId=59d3d1490207094f3d045cf1231e50e1&camp=1789&creative=9325)
+
 
 Or you can use a StackMat like the [QiYi Timer Magic Cube Speed Timer](https://s.click.aliexpress.com/e/_DlMhpDL) (also affiliate link) with a regular cube.
 
@@ -65,13 +66,16 @@ A small gallery to know more about the project.
 ![USB connector hole (power and flash)](images/20230425_221229x.jpg)
 ![Components inside](images/20230527_090326x.jpg)
 ![GAN Smart Cube pairing](images/20230527_090548x.jpg)
-![Configuration menu](images/20230527_090845x.jpg)
+![Configuration menu](images/20230609_155641x.jpg)
+![Puzzles menu](images/20230609_155711x.jpg)
 ![Stats for user](images/20230527_090713x.jpg)
-![2D cube sync](images/20230527_090732x.jpg)
-![3D cube sync](images/20230527_090751x.jpg)
+![2D 3x3x3 cube sync](images/20230527_090732x.jpg)
+![3D 3x3x3 cube sync](images/20230527_090751x.jpg)
+![3D 2x2x2 cube sync](images/20230609_160140x.jpg)
 ![Scrambling a smart cube](images/20230527_090809x.jpg)
 ![Scrambling a regular cube to use a StackMat](images/20230527_090943x.jpg)
 ![Timing uing a StackMat](images/20230527_091018x.jpg)
+![User stats](images/20230609_160227x.jpg)
 ![Giiker and Gan Smart cubes](images/20230529_141717x.jpg)
 
 
