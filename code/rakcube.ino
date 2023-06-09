@@ -193,9 +193,9 @@ void touch_callback(unsigned char event) {
             if (g_state == STATE_CONFIG) g_state = STATE_USER;
         } else {
             if (g_state == STATE_USER) g_state = STATE_SCRAMBLE_MANUAL;
+            if (g_state == STATE_PUZZLES) g_state = STATE_USER;
             if (g_state == STATE_CONFIG) g_state = STATE_PUZZLES;
         }
-        if (g_state == STATE_PUZZLES) g_state = STATE_USER;
         if (g_state == STATE_SOLVED) g_state = STATE_USER;
 
     }
@@ -203,13 +203,13 @@ void touch_callback(unsigned char event) {
     // Move backward (solved->inspect->scramble->3d->2d->user->puzzles->config)
     if (event == TOUCH_EVENT_SWIPE_RIGHT) {
 
-        if (g_state == STATE_PUZZLES) g_state = STATE_CONFIG;
         if (g_mode == MODE_SMARTCUBE) {
             if (g_state == STATE_USER) g_state = STATE_CONFIG;
             if (g_state == STATE_2D) g_state = STATE_USER;
             if (g_state == STATE_3D) g_state = STATE_2D;
             if (g_state == STATE_SCRAMBLE) g_state = STATE_3D;
         } else {
+            if (g_state == STATE_PUZZLES) g_state = STATE_CONFIG;
             if (g_state == STATE_USER) g_state = STATE_PUZZLES;
             if (g_state == STATE_SCRAMBLE_MANUAL) g_state = STATE_USER;
         }
