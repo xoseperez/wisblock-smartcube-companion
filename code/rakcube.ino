@@ -13,7 +13,7 @@
 
 unsigned char _last_state = STATE_SLEEPING;
 bool _force_state = false;
-bool _save_solve = true;
+bool _save_solve = false;
 Ring _ring;
 bool _scramble_update = false;
 
@@ -442,16 +442,18 @@ void state_machine() {
     _force_state = false;
     
     // Handle state exit cases    
-    if ((_last_state != g_state) && (_last_state == STATE_SOLVED)) {
-        if (_save_solve) {
-            unsigned long time = cube_time();
-            unsigned short turns = cube_turns();
-            if (time > 0) {
-                add_solve(g_puzzle, g_user, time, turns);
-                save_flash = true;
-            }
+    if ((_last_state != g_state) && (_save_solve)) {
+        _save_solve = false;
+        unsigned long time = cube_time();
+        unsigned short turns = cube_turns();
+        if (time > 0) {
+            #if DEBUG>1
+                char buffer[20];
+                Serial.printf("[MAIN] Adding solve time: %s\n", utils_time_to_text(time, buffer, true));
+            #endif
+            add_solve(g_puzzle, g_user, time, turns);
+            save_flash = true;
         }
-        _save_solve = true;
     }
 
     if (changed_state) {
@@ -604,6 +606,7 @@ void state_machine() {
                 if (time == 0) {
                     g_state = STATE_2D;
                 } else {
+                    _save_solve = true;
                     display_page_solved();
                     changed_display = true;
                 }

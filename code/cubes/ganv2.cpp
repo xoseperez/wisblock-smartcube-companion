@@ -41,7 +41,7 @@ extern uint8_t g_puzzle;
 // ----------------------------------------------------------------------------
 
 static const uint8_t GANV2_AES128_KEY[] = {  1,  2, 66, 40, 49,145, 22,  7, 32,  5, 24, 84, 66, 17, 18, 83};
-static const uint8_t GANV2_AES128_IV[] = { 17,  3, 50, 40, 33,  1,118, 39, 32,149,120, 20, 50, 18,  2, 67};
+static const uint8_t GANV2_AES128_IV[]  = { 17,  3, 50, 40, 33,  1,118, 39, 32,149,120, 20, 50, 18,  2, 67};
 
 void ganv2_init_aes128() {
     
@@ -75,7 +75,7 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
     
     if (aes128_decode(data, len)) {
 
-        #if DEBUG > 1
+        #if DEBUG > 2
             Serial.printf("[GAN] Received: ");
             for (uint16_t i=0; i<len; i++) {
                 Serial.printf("%02X", data[i]);

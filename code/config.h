@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------------
 
 #define APP_NAME                    "SMARTCUBE COMPANION"
-#define APP_VERSION                 "v0.9.0"
+#define APP_VERSION                 "v0.9.1"
 #define SHUTDOWN_TIMEOUT            60000
 #define CONNECT_TIMEOUT             20000    
 #define INTRO_TIMEOUT               5000
@@ -82,6 +82,7 @@ enum {
 // Stackmat interface
 // ----------------------------------------------------------------------------
 
+#define STACKMAT_SERIAL             Serial1
 #define STACKMAT_RX_PIN             PIN_SERIAL1_RX
 #define STACKMAT_TX_PIN             PIN_SERIAL1_TX
 #define STACKMAT_BAUDRATE           1200

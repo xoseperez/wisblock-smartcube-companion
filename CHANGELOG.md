@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1 (2023-06-14)
+
+*  Fix not saving data after a solve if two moves too fast
+
 ## 0.9.0 (2023-06-08)
 
 * Support for GoCube cubes (tested with GoCubeX)

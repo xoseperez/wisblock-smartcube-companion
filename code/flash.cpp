@@ -14,7 +14,7 @@ File _settings_file(InternalFS);
 
 void flash_dump() {
 
-    #if DEBUG > 1
+    #if DEBUG > 2
     
         Serial.println("[FLASH] Settings dump");
 
@@ -147,7 +147,7 @@ bool flash_save() {
 
     if (memcmp((void *)&flash_content, (void *)&g_settings, sizeof(s_settings)) != 0) {
 		
-        #if DEBUG > 0
+        #if DEBUG > 1
             Serial.println("[FLASH] Flash content changed, writing new data");
 		    delay(100);
         #endif
