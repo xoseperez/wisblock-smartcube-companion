@@ -4,6 +4,7 @@
 #include "cube.h"
 #include "ring.h"
 #include "cubes/ganv2.h"
+//#include "cubes/moyuai.h"
 #include "cubes/giiker.h"
 #include "cubes/gocube.h"
 
@@ -66,6 +67,7 @@ bool cube_bind(uint8_t conn_handle) {
     // Walk through cubes to identify the connection
     _cube_connected = false;
     _cube_connected = _cube_connected || ganv2_start(conn_handle);
+    //_cube_connected = _cube_connected || moyuai_start(conn_handle);
     _cube_connected = _cube_connected || giiker_start(conn_handle);
     _cube_connected = _cube_connected || gocube_start(conn_handle);
 
@@ -84,6 +86,7 @@ void cube_unbind() {
 
 void cube_setup() {
     ganv2_init();
+    //moyuai_init();
     giiker_init();
     gocube_init();
     randomSeed(analogRead(WB_A1));
