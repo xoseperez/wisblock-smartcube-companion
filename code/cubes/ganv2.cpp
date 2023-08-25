@@ -40,21 +40,30 @@ extern uint8_t g_puzzle;
 // AES
 // ----------------------------------------------------------------------------
 
-static const uint8_t GANV2_AES128_KEY[] = {  1,  2, 66, 40, 49,145, 22,  7, 32,  5, 24, 84, 66, 17, 18, 83};
-static const uint8_t GANV2_AES128_IV[]  = { 17,  3, 50, 40, 33,  1,118, 39, 32,149,120, 20, 50, 18,  2, 67};
+static const uint8_t GANV2_AES128_KEY[]  = {   1,   2,  66,  40,  49, 145,  22,   7,  32,   5,  24,  84,  66,  17,  18,  83 };
+static const uint8_t GANV2_AES128_IV[]   = {  17,   3,  50,  40,  33,   1, 118,  39,  32, 149, 120,  20,  50,  18,   2,  67 };
+static const uint8_t MOYUAI_AES128_KEY[] = {   5,  18,   2,  69,   2,   1,  41,  86,  18, 120,  18, 118, 129,   1,   8,   3 };
+static const uint8_t MOYUAI_AES128_IV[]  = {   1,  68,  40,   6, 134,  33,  34,  40,  81,   5,   8,  49, 130,   2,  33,   6 };
 
-void ganv2_init_aes128() {
+void ganv2_init_aes128(uint8_t version) {
     
-    // Get MAC
-    unsigned char * mac = bluetooth_peer_addr();
-
     // Key placeholder
     uint8_t key[16] = {0};
     uint8_t iv[16] = {0};
 
+    // Copy seed keys
+    if (0 == version) {
+        memcpy(key, GANV2_AES128_KEY, 16);
+        memcpy(iv, GANV2_AES128_IV, 16);
+    } else {
+        memcpy(key, MOYUAI_AES128_KEY, 16);
+        memcpy(iv, MOYUAI_AES128_IV, 16);
+    }
+
+    // Get MAC
+    unsigned char * mac = bluetooth_peer_addr();
+
     // Calculate keys
-    memcpy(key, GANV2_AES128_KEY, 16);
-    memcpy(iv, GANV2_AES128_IV, 16);
     for (uint8_t i=0; i<6; i++) {
         key[i] = ( key[i] + mac[5-i] ) % 255;
         iv[i] = ( iv[i] + mac[5-i] ) % 255;
@@ -239,8 +248,18 @@ bool ganv2_start(uint16_t conn_handle) {
         Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
     #endif
 
+    // Get cube type
+    uint8_t version = (strncmp(bluetooth_peer_name(), "AiCube", 6) == 0) ? 1 : 0;
+    #if DEBUG > 0
+        if (0 == version) {
+            Serial.println("[GAN] Identified as GAN cube.");
+        } else {
+            Serial.println("[GAN] Identified as MOYU AI cube.");
+        }
+    #endif
+
     // Set up encoder
-    ganv2_init_aes128();
+    ganv2_init_aes128(version);
 
     // Query the cube
     ganv2_data_send(GANV2_GET_HARDWARE);
