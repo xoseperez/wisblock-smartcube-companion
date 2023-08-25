@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2 (2023-08-25)
+
+*  Suport for Moyu AI 2023
+
 ## 0.9.1 (2023-06-14)
 
 *  Fix not saving data after a solve if two moves too fast
