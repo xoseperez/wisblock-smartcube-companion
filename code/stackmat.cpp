@@ -5,7 +5,12 @@
 #include "stackmat.h"
 #include "config.h"
 
-SoftwareSerial _stackmat_serial(STACKMAT_RX_PIN, STACKMAT_TX_PIN, true);
+#ifdef STACKMAT_SERIAL
+    #define _stackmat_serial STACKMAT_SERIAL
+#else
+    SoftwareSerial _stackmat_serial(STACKMAT_RX_PIN, STACKMAT_TX_PIN, true);
+#endif
+
 void (*_stackmat_callback)(uint8_t event, uint8_t * data);
 unsigned char _stackmat_state = STACKMAT_STATE_DISCONNECTED;
 unsigned long _stackmat_last = 0;
