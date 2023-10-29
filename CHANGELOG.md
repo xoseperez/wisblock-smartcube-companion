@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.3 (2023-10-29)
+
+*  Fix turns overflow (increased it to a 16bit integer)
+
 ## 0.9.2 (2023-08-25)
 
 *  Suport for Moyu AI 2023

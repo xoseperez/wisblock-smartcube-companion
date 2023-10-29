@@ -18,7 +18,7 @@ bool _cube_running_metrics = false;
 uint32_t _cube_last_move_millis = 0;
 uint32_t _cube_start = 0;
 uint32_t _cube_time = 0;
-uint8_t _cube_turns = 0;
+uint16_t _cube_turns = 0;
 
 char _cube_step[4] = {0};
 
@@ -235,7 +235,7 @@ unsigned long cube_time() {
 bool cube_running_metrics() {
     return _cube_running_metrics;
 }
-unsigned short cube_turns() {
+unsigned long cube_turns() {
     return _cube_turns;
 }
 

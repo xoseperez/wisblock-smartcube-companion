@@ -351,8 +351,8 @@ void add_solve(uint8_t puzzle, uint8_t user, uint32_t time, uint16_t turns) {
     uint32_t turns_time_sum12 = time;
     uint32_t turns_sum5 = turns;
     uint32_t turns_sum12 = turns;
-    uint8_t turns_count5 = (turns > 0) ? 1 : 0;
-    uint8_t turns_count12 = turns_count5;
+    uint16_t turns_count5 = (turns > 0) ? 1 : 0;
+    uint16_t turns_count12 = turns_count5;
     
 
     // Move solves
@@ -444,8 +444,8 @@ void state_machine() {
     // Handle state exit cases    
     if ((_last_state != g_state) && (_save_solve)) {
         _save_solve = false;
-        unsigned long time = cube_time();
-        unsigned short turns = cube_turns();
+        uint32_t time = cube_time();
+        uint16_t turns = cube_turns();
         if (time > 0) {
             #if DEBUG>1
                 char buffer[20];
