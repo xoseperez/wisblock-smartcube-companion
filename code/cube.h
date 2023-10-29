@@ -30,8 +30,8 @@ void cube_unbind();
 void cube_metrics_start(uint32_t ms = 0);
 void cube_metrics_end(uint32_t ms = 0);
 bool cube_running_metrics();
-unsigned short cube_turns();
-unsigned long cube_time();
+uint16_t cube_turns();
+uint32_t cube_time();
 void cube_time(unsigned long ms);
 
 unsigned char * cube_cubelets();

@@ -225,7 +225,7 @@ void cube_time(unsigned long ms) {
     _cube_time = ms;
 }
 
-unsigned long cube_time() {
+uint32_t cube_time() {
     if (_cube_running_metrics) {
         return millis() - _cube_start;
     }
@@ -235,7 +235,7 @@ unsigned long cube_time() {
 bool cube_running_metrics() {
     return _cube_running_metrics;
 }
-unsigned long cube_turns() {
+uint16_t cube_turns() {
     return _cube_turns;
 }
 
