@@ -51,7 +51,7 @@ const char * PUZZLE_NAMES[6] = {
 
 const char * DISPLAY_CONFIG_BUTTONS[] = {
     "SMARTCUBE",
-    "STACKMAT",
+    "TIMER",
     "MANUAL",
     "SHUT DOWN"
 };
@@ -641,7 +641,7 @@ void display_page_smartcube_connect() {
 
 }
 
-void display_page_stackmat_connect() {
+void display_page_timer_connect() {
     
     display_draw_bmp(&bmp_cube_info, 160-50, 120-50, 0, 2);
 

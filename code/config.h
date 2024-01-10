@@ -21,7 +21,7 @@ enum {
     STATE_INTRO,
     STATE_CONFIG,
     STATE_SMARTCUBE_CONNECT,
-    STATE_STACKMAT_CONNECT,
+    STATE_TIMER_CONNECT,
     STATE_PUZZLES,
     STATE_USER,
     STATE_USER_CONFIRM_RESET,
@@ -37,7 +37,7 @@ enum {
 
 enum {
     MODE_SMARTCUBE,
-    MODE_STACKMAT,
+    MODE_TIMER,
     MODE_MANUAL,
     MODE_SHUTDOWN,
     MODE_NONE
@@ -79,14 +79,14 @@ enum {
 #define TOUCH_INT_PIN               WB_IO6
 
 // ----------------------------------------------------------------------------
-// Stackmat interface
+// Timer interface
 // ----------------------------------------------------------------------------
 
-#define STACKMAT_SERIAL             Serial1
-#define STACKMAT_RX_PIN             PIN_SERIAL1_RX
-#define STACKMAT_TX_PIN             PIN_SERIAL1_TX
-#define STACKMAT_BAUDRATE           1200
-#define STACKMAT_TIMEOUT            2000
+#define TIMER_SERIAL                Serial1
+#define TIMER_RX_PIN                PIN_SERIAL1_RX
+#define TIMER_TX_PIN                PIN_SERIAL1_TX
+#define TIMER_BAUDRATE              1200
+#define TIMER_TIMEOUT               2000
 
 // ----------------------------------------------------------------------------
 // Touch

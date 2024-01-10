@@ -1,6 +1,6 @@
 # WisBlock Smart Cube Companion
 
-This repository holds the code for the WisBlock Smart Cube Companion. A BLE device to be used with Smart Magic Cubes like GAN 356 i3, GoCube, Giiker and Xiaomi cubes, that also suppoprts Stackmat connection or good old fingertip start/stop.
+This repository holds the code for the WisBlock Smart Cube Companion. A BLE device to be used with Smart Magic Cubes like GAN 356 i3, GoCube, Giiker and Xiaomi cubes, that also supports an analog timer connection or good old fingertip start/stop.
 
 ![WisBlock Smart Cube Companion](images/20230527_090751x.jpg)
 

@@ -32,7 +32,7 @@ void display_button(uint8_t id, char * text, uint16_t x, uint16_t y, uint16_t w,
 void display_page_intro();
 void display_page_config(uint8_t mode);
 void display_page_smartcube_connect();
-void display_page_stackmat_connect();
+void display_page_timer_connect();
 void display_page_puzzles(uint8_t puzzle);
 void display_page_user(uint8_t puzzle, uint8_t user);
 void display_page_user_confirm_reset(uint8_t puzzle, uint8_t user);

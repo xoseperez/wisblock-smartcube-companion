@@ -7,7 +7,7 @@
 #include "display.h"
 #include "touch.h"
 #include "cube.h"
-#include "stackmat.h"
+#include "timer.h"
 #include "flash.h"
 #include "ring.h"
 
@@ -124,12 +124,12 @@ void touch_callback(unsigned char event) {
                     break;
 
                 case 1:
-                    if (stackmat_state() != STACKMAT_STATE_DISCONNECTED) {
+                    if (timer_state() != TIMER_STATE_DISCONNECTED) {
                         if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
-                        g_mode = MODE_STACKMAT;
+                        g_mode = MODE_TIMER;
                         g_state = STATE_PUZZLES; 
                     } else {
-                        g_state = STATE_STACKMAT_CONNECT;
+                        g_state = STATE_TIMER_CONNECT;
                     }
                     break;
 
@@ -220,18 +220,18 @@ void touch_callback(unsigned char event) {
 
 }
 
-void stackmat_callback(unsigned char event, uint8_t * data) {
+void timer_callback(unsigned char event, uint8_t * data) {
 
     #if DEBUG > 1
-        Serial.printf("[MAIN] Stackmat event #%d\n", event);
+        Serial.printf("[MAIN] Timer event #%d\n", event);
     #endif
 
-    if (event == STACKMAT_EVENT_DISCONNECT) {
+    if (event == TIMER_EVENT_DISCONNECT) {
         g_mode = MODE_NONE;
         g_state = STATE_CONFIG;
     }
     
-    if (event == STACKMAT_EVENT_START) {
+    if (event == TIMER_EVENT_START) {
         if ((g_state == STATE_SCRAMBLE_MANUAL) || (g_state == STATE_INSPECT)) {
             cube_metrics_start(millis());
             utils_beep();
@@ -239,21 +239,21 @@ void stackmat_callback(unsigned char event, uint8_t * data) {
         }
     }
 
-    if (event == STACKMAT_EVENT_STOP) {
+    if (event == TIMER_EVENT_STOP) {
         if (g_state == STATE_TIMER) {
             
             cube_metrics_end(millis());
             utils_beep();
             g_state = STATE_SOLVED;
             
-            // Sync time with stackmat
+            // Sync time with timer
             uint32_t ms = (data[0] << 24)  + (data[1] << 16) + (data[2] << 8) + data[3];
             cube_time(ms);
             
         }
     }
 
-    if (event == STACKMAT_EVENT_RESET) {
+    if (event == TIMER_EVENT_RESET) {
         g_state = STATE_SCRAMBLE_MANUAL;
     }
 
@@ -504,14 +504,14 @@ void state_machine() {
             }
             break;
 
-        case STATE_STACKMAT_CONNECT:
+        case STATE_TIMER_CONNECT:
             if (changed_state) {
-                display_page_stackmat_connect();
+                display_page_timer_connect();
                 changed_display = true;
             }
-            if (stackmat_state() != STACKMAT_STATE_DISCONNECTED) {
+            if (timer_state() != TIMER_STATE_DISCONNECTED) {
                 if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
-                g_mode = MODE_STACKMAT;
+                g_mode = MODE_TIMER;
                 g_state = STATE_USER;
             }
             if (millis() - last_change > CONNECT_TIMEOUT) {
@@ -643,7 +643,7 @@ void setup() {
     bluetooth_setup();
     display_setup();
     cube_setup();
-    stackmat_setup();
+    timer_setup();
 
     while (!touch_setup(TOUCH_INT_PIN)) {
 	    Serial.println("[MAIN] Touch interface is not connected");
@@ -653,14 +653,14 @@ void setup() {
     // Callback to be called upon event
     touch_set_callback(touch_callback);
     cube_set_callback(cube_callback);
-    stackmat_set_callback(stackmat_callback);
+    timer_set_callback(timer_callback);
 
 }
 
 void loop() {
 
     //bluetooth_loop();
-    stackmat_loop();
+    timer_loop();
     touch_loop();
     //display_loop();
     state_machine();
