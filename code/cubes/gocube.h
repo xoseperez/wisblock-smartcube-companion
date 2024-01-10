@@ -5,7 +5,6 @@
 #define GOCUBE_GET_STATE 51
 
 void gocube_init();
-void gocube_reset();
 bool gocube_start(uint16_t conn_handle);
 
 // privates
