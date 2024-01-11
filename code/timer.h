@@ -16,14 +16,22 @@ enum {
     TIMER_STATE_STOPPED,
 };
 
-typedef union {
-  float number = 0;
-  uint8_t bytes[4];
-} FLOATUNION_t;
+// ------------------------------------
 
-void timer_loop();
 void timer_setup();
-void timer_set_callback(void (*callback)(uint8_t event, uint8_t * data));
+void timer_enable(bool enable = false);
 uint8_t timer_state();
+void timer_set_callback(void (*callback)(uint8_t event, uint8_t * data));
+
+// ------------------------------------
+// Callbacks from smart timers
+// ------------------------------------
+
+// ------------------------------------
+// Callbacks from bluetooth module
+// ------------------------------------
+
+bool timer_bind(uint8_t conn_handle);
+void timer_unbind();
 
 #endif // _TIMER_H

@@ -124,6 +124,7 @@ void touch_callback(unsigned char event) {
                     break;
 
                 case 1:
+                    timer_enable(true);
                     if (timer_state() != TIMER_STATE_DISCONNECTED) {
                         if (g_mode == MODE_SMARTCUBE) bluetooth_disconnect();
                         g_mode = MODE_TIMER;
@@ -226,7 +227,14 @@ void timer_callback(unsigned char event, uint8_t * data) {
         Serial.printf("[MAIN] Timer event #%d\n", event);
     #endif
 
+    if (event == TIMER_EVENT_CONNECT) {
+        utils_beep();
+        g_state = STATE_USER;
+        g_mode = MODE_SMARTTIMER;
+    }
+
     if (event == TIMER_EVENT_DISCONNECT) {
+        timer_enable(false);
         g_mode = MODE_NONE;
         g_state = STATE_CONFIG;
     }
@@ -515,6 +523,7 @@ void state_machine() {
                 g_state = STATE_USER;
             }
             if (millis() - last_change > CONNECT_TIMEOUT) {
+                timer_enable(false);
                 g_state = STATE_CONFIG;
             }
             break;
@@ -660,7 +669,7 @@ void setup() {
 void loop() {
 
     //bluetooth_loop();
-    timer_loop();
+    //timer_loop();
     touch_loop();
     //display_loop();
     state_machine();

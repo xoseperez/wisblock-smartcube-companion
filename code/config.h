@@ -37,6 +37,7 @@ enum {
 
 enum {
     MODE_SMARTCUBE,
+    MODE_SMARTTIMER,
     MODE_TIMER,
     MODE_MANUAL,
     MODE_SHUTDOWN,

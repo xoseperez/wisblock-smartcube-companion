@@ -5,6 +5,7 @@
 #include "bluetooth.h"
 #include "utils.h"
 #include "cube.h"
+#include "timer.h"
 
 #define MACS_MAX 20
 unsigned char mac_values[MACS_MAX][6];
@@ -132,6 +133,8 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
 
     // Check if device is a supported cube
     if (cube_bind(conn_handle)) {
+        bluetooth_scan(false);
+    } else if (timer_bind(conn_handle)) {
         bluetooth_scan(false);
     } else {
         connection->disconnect();
