@@ -17,6 +17,7 @@ enum {
     TOUCH_EVENT_SWIPE_DOWN,
 };
 
+void touch_power_mode(uint8_t mode);
 bool touch_setup(unsigned char interrupt_pin);
 void touch_loop(void);
 unsigned char touch_event();

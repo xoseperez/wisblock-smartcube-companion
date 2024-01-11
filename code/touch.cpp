@@ -132,9 +132,14 @@ void touch_set_callback(void (*callback)(unsigned char type)) {
     _touch_callback = callback;
 }
 
+void touch_power_mode(uint8_t mode) {
+    _touch_interface.write_power_mode(mode);
+}
+
 bool touch_setup(unsigned char interrupt_pin) {
     
     if (!_touch_interface.begin()) return false;
+    touch_power_mode(0);
 
     pinMode(interrupt_pin, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(interrupt_pin), [](void) { _touch_flag = true; }, FALLING);

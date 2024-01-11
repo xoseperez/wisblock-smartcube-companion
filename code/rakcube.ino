@@ -5,6 +5,7 @@
 #include "bluetooth.h"
 #include "utils.h"
 #include "display.h"
+#include "lorawan.h"
 #include "touch.h"
 #include "cube.h"
 #include "timer.h"
@@ -636,7 +637,8 @@ void setup() {
     #endif
 
     wdt_set(WDT_SECONDS);
-    
+
+    lorawan_setup();
     utils_setup();
     flash_setup();
     flash_load();

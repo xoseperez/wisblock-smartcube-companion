@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.4 (2024-01-11)
+
+*  Reduce power consumption while sleeping down to 3.3mA, still too high.
+
 ## 0.9.3 (2023-10-29)
 
 *  Fix turns overflow (increased it to a 16bit integer)

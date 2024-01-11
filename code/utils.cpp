@@ -63,17 +63,11 @@ void utils_sleep() {
     display_off();
     bluetooth_scan(false);
     bluetooth_disconnect();
-
+    touch_power_mode(1);
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
 
-    attachInterrupt(
-        TOUCH_INT_PIN, 
-        []() { if (_utils_sleeping) _utils_sleeping = false; },
-        RISING
-    );
-
     #if DEBUG > 0
-        Serial.printf("[MAIN] Goind to sleep\n");
+        Serial.printf("[MAIN] Going to sleep\n");
         delay(100);
     #endif
 
@@ -87,22 +81,22 @@ void utils_sleep() {
     NRF_SPI0->ENABLE = 0;  //disable SPI
     NRF_SPI1->ENABLE = 0;  //disable SPI
     NRF_SPI2->ENABLE = 0;  //disable SPI
-
     
+    //NRF_POWER->SYSTEMOFF = 1;
+
     while(true) {
     
-        while (_utils_sleeping) {
-            __WFE();
-            __WFI();
+        __WFE();
+        __WFI();
+
+        // get out of sleeping if pressed for > 2s
+        delay(2000);
+        if (digitalRead(TOUCH_INT_PIN) == LOW) {
+            //NVIC_SystemReset();
+            break;
         }
 
-        // get out of sleeping if pressed for > 1s
-        delay(1000);
-        if (digitalRead(TOUCH_INT_PIN) == LOW) break;
-        
     }
-
-    detachInterrupt(TOUCH_INT_PIN);
 
     NRF_UARTE0->ENABLE = UARTE_ENABLE_ENABLE_Enabled;
     NRF_SPIM2->ENABLE = (SPI_ENABLE_ENABLE_Enabled << SPI_ENABLE_ENABLE_Pos);
@@ -110,8 +104,8 @@ void utils_sleep() {
 
     delay(100);
 
-    bluetooth_scan(true);
     display_on();
+    touch_power_mode(0);
     touch_setup(TOUCH_INT_PIN);
 
     #if DEBUG > 0
