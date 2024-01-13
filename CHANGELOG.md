@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.9.4 (2024-01-11)
+## Unreleased
 
-*  Reduce power consumption while sleeping down to 3.3mA, still too high.
+*  Reduce power consumption while sleeping from 11.7mA down to 3.3mA, still too high.
 
 ## 0.9.3 (2023-10-29)
 
