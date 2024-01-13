@@ -857,9 +857,11 @@ void display_clear() {
 void display_off() {
     digitalWrite(DISPLAY_BL_GPIO, LOW);
     digitalWrite(DISPLAY_EN_GPIO, LOW);
+    _display_screen.enableSleep(true);
 }
 
 void display_on() {
+    _display_screen.enableSleep(false);
     digitalWrite(DISPLAY_EN_GPIO, HIGH);
     digitalWrite(DISPLAY_BL_GPIO, HIGH);
 }
