@@ -14,6 +14,7 @@ uint8_t _utils_peer_battery = 0;
 
 void utils_setup() {
     pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, LOW);
     pinMode(BAT_MEASUREMENT_GPIO, INPUT);
     analogReference(AR_INTERNAL_3_0);
     analogReadResolution(12);
@@ -33,6 +34,7 @@ void utils_beep(unsigned short freq, unsigned long ms) {
     tone(BUZZER_PIN, freq);
     system_delay(ms);
     noTone(BUZZER_PIN);
+    digitalWrite(BUZZER_PIN, LOW);
 }
 
 char * utils_device_name() {

@@ -139,6 +139,7 @@ void touch_power_mode(uint8_t mode) {
 bool touch_setup(unsigned char interrupt_pin) {
     
     if (!_touch_interface.begin()) return false;
+    //_touch_interface.write_monitor_mode_period(250); // 4Hz
     touch_power_mode(0);
 
     pinMode(interrupt_pin, INPUT_PULLUP);
