@@ -3,6 +3,7 @@
 ## Unreleased
 
 *  Reduce power consumption while sleeping from 11.7mA down to 3.3mA, still too high.
+* Support for GanTimer (connect as if it was a Bluetooth cube).
 
 ## 0.9.3 (2023-10-29)
 
