@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "bluetooth.h"
+#include "system.h"
 #include "utils.h"
 #include "display.h"
 #include "lorawan.h"
@@ -509,7 +510,7 @@ void state_machine() {
     switch (g_state) {
 
         case STATE_SLEEPING:
-            utils_sleep();
+            system_off();
             g_state = STATE_INTRO;
             break;
 
@@ -686,7 +687,7 @@ void setup() {
 		Serial.printf("\n[MAIN] %s %s\n\n", APP_NAME, APP_VERSION);
     #endif
 
-    wdt_set(WDT_SECONDS);
+    system_wdt_enable(WDT_SECONDS);
 
     lorawan_setup();
     utils_setup();
@@ -716,8 +717,8 @@ void loop() {
     touch_loop();
     //display_loop();
     state_machine();
-    wdt_feed();
+    system_wdt_feed();
 
-    utils_delay(1);
+    system_delay(1);
 
 }

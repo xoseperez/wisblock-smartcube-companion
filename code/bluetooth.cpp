@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "cube.h"
 #include "timer.h"
+#include "system.h"
 
 #define MACS_MAX 20
 unsigned char mac_values[MACS_MAX][6];
@@ -108,7 +109,7 @@ void bluetooth_connect_callback(uint16_t conn_handle) {
     BLEConnection* connection = Bluefruit.Connection(conn_handle);
 
     // Check if sleeping
-    if (utils_sleeping()) {
+    if (system_sleeping()) {
         connection->disconnect();
         return;
     }
@@ -153,7 +154,7 @@ void bluetooth_disconnect_callback(uint16_t conn_handle, uint8_t reason) {
     #endif
 
     cube_unbind();
-    bluetooth_scan(!utils_sleeping());
+    bluetooth_scan(!system_sleeping());
 
 }
 
