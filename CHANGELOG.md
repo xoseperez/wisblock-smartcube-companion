@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.9.4 (Unreleased)
 
-*  Reduce power consumption while sleeping from 11.7mA down to 3.3mA, still too high.
+* Reduce power consumption while sleeping from 11.7mA down to 3.3mA, still too high.
+* Option to modify display brightness to reduce power consumption (93mA for 100% down to 26mA for 10%)
 * Support for GanTimer (connect as if it was a Bluetooth cube).
 
 ## 0.9.3 (2023-10-29)

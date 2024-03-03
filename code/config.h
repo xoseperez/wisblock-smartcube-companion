@@ -6,7 +6,7 @@
 // ----------------------------------------------------------------------------
 
 #define APP_NAME                    "SMARTCUBE COMPANION"
-#define APP_VERSION                 "v0.9.3"
+#define APP_VERSION                 "v0.9.4"
 #define SHUTDOWN_TIMEOUT            60000
 #define CONNECT_TIMEOUT             20000    
 #define INTRO_TIMEOUT               5000
