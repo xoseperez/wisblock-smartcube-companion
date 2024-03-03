@@ -31,6 +31,7 @@ void display_button(uint8_t id, char * text, uint16_t x, uint16_t y, uint16_t w,
 // Public
 void display_page_intro();
 void display_page_config(uint8_t mode);
+void display_page_brightness();
 void display_page_smartcube_connect();
 void display_page_timer_connect();
 void display_page_puzzles(uint8_t puzzle);
@@ -47,6 +48,8 @@ void display_page_solved();
 void display_clear();
 void display_on();
 void display_off();
+void display_brightness(uint8_t brightness);
+uint8_t display_brightness();
 
 void display_start_transaction();
 void display_end_transaction();

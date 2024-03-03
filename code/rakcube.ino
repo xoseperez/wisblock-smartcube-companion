@@ -111,6 +111,33 @@ void touch_callback(unsigned char event) {
             }
         }
 
+        if (g_state == STATE_BRIGHTNESS) {
+            uint8_t value = display_brightness();
+            switch (button) {
+                case 0:
+                    if (value >= 20) {
+                        display_brightness(value - 10);
+                        _force_state = true;
+                    }
+                    break;
+
+                case 1:
+                    g_state = STATE_CONFIG;
+                    return;
+
+                case 2:
+                    if (value <= 90) {
+                        display_brightness(value + 10);
+                        _force_state = true;
+                    }
+                    break;
+
+                default:
+                    break;
+            
+            }
+        }
+
         if (g_state == STATE_CONFIG) {
             switch (button) {
 
@@ -141,6 +168,10 @@ void touch_callback(unsigned char event) {
                     break;
 
                 case 3:
+                    g_state = STATE_BRIGHTNESS;
+                    break;
+
+                case 4:
                     g_state = STATE_SLEEPING;
                     break;
 
@@ -487,6 +518,16 @@ void state_machine() {
         case STATE_CONFIG:
             if (changed_state) {
                 display_page_config(g_mode);
+                changed_display = true;
+            }
+            if (millis() - last_change > SHUTDOWN_TIMEOUT) {
+                g_state = STATE_SLEEPING;
+            }
+            break;
+
+        case STATE_BRIGHTNESS:
+            if (changed_state) {
+                display_page_brightness();
                 changed_display = true;
             }
             if (millis() - last_change > SHUTDOWN_TIMEOUT) {

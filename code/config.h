@@ -20,6 +20,7 @@ enum {
     STATE_SLEEPING,
     STATE_INTRO,
     STATE_CONFIG,
+    STATE_BRIGHTNESS,
     STATE_SMARTCUBE_CONNECT,
     STATE_TIMER_CONNECT,
     STATE_PUZZLES,
@@ -71,6 +72,7 @@ enum {
 #define DISPLAY_RST_GPIO            WB_IO5
 #define DISPLAY_DC_GPIO             WB_IO4
 #define DISPLAY_EN_GPIO             WB_IO2
+#define DISPLAY_DEFAULT_BRIGHTNESS  20
 
 // ----------------------------------------------------------------------------
 // Touch
@@ -110,6 +112,10 @@ enum {
 
 #define BATT_MIN_MV                 3300
 #define BATT_MAX_MV                 4100
+
+#define BATTERY_CAPACITY            750 // in mAh
+#define BASE_CONSUMPTION            17 // in mA
+#define MAX_DISPLAY_CONSUMPTION     80 // in mA
 
 #endif // _CONFIG_H
 

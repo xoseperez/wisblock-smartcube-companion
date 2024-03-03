@@ -56,6 +56,7 @@ const char * DISPLAY_CONFIG_BUTTONS[] = {
     "SHUT DOWN"
 };
 
+unsigned char _display_brightness = DISPLAY_DEFAULT_BRIGHTNESS;
 
 // ----------------------------------------------------------------------------
 // Private
@@ -598,18 +599,55 @@ void display_page_intro() {
 
 void display_page_config(uint8_t mode) {
 
-
     uint16_t margin = 10;
     uint16_t height = (DISPLAY_HEIGHT - 3 * margin) / 2;
     uint16_t width = (DISPLAY_WIDTH - 4 * margin) / 3;
 
     display_clear_buttons();
-    for (uint8_t i=0; i<4; i++) {
+    for (uint8_t i=0; i<5; i++) {
         uint8_t x = margin + (margin + width) * (i%3);
         uint8_t y = margin + (margin + height) * ((int) (i/3));
         display_button(i, (char *) "", x, y, width, height, mode == i ? ST77XX_DARKGREEN : ST77XX_RED);
         display_draw_icon(config_icons[i], x + width/2, y + height / 2, 64, 64);
     }
+
+}
+
+void display_page_brightness() {
+
+    uint16_t margin = 10;
+    uint16_t width = (DISPLAY_WIDTH - 5 * margin) / 4;
+    uint16_t height = 40;
+    uint16_t buttons_y = DISPLAY_HEIGHT - height - margin;
+
+    char buffer[60];
+
+    // Header
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
+    _display_canvas.setTextSize(2);
+    display_text((char *) "BRIGHTNESS", margin, margin);
+
+    // Current setting
+    uint8_t value = display_brightness();
+    snprintf(buffer, sizeof(buffer), "%d%%", value);
+    _display_canvas.setTextSize(6);
+    _display_canvas.setTextColor(ST77XX_GREEN, ST77XX_BLACK);
+    display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2-20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    uint16_t hours = BATTERY_CAPACITY * (utils_get_battery() / 100.0) / (BASE_CONSUMPTION + MAX_DISPLAY_CONSUMPTION * value / 100.0);
+    snprintf(buffer, sizeof(buffer), "Estimated battery life: %d hours", hours);
+    _display_canvas.setTextSize(1);
+    _display_canvas.setTextColor(ST77XX_DARKGREEN, ST77XX_BLACK);
+    display_text(buffer, DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2+20, DISPLAY_ALIGN_CENTER | DISPLAY_ALIGN_MIDDLE);
+
+    // Buttons
+    display_clear_buttons();
+    _display_canvas.setTextSize(2);
+    display_button(0, (char *) "-", margin, buttons_y, width, height, ST77XX_RED);
+    display_button(1, (char *) "DONE", 2 * margin + width, buttons_y, 2 * width + margin, height, ST77XX_RED);
+    display_button(2, (char *) "+", DISPLAY_WIDTH - margin - width, buttons_y, width, height, ST77XX_RED);
+
+    display_stats();
 
 }
 
@@ -854,16 +892,34 @@ void display_clear() {
     _display_screen.fillScreen(ST77XX_BLACK);
 }
 
+void display_set_duty_cycle() {
+    if (digitalRead(DISPLAY_EN_GPIO) == HIGH) {
+        uint8_t duty_cycle = map(_display_brightness, 0, 100, 0, 255);
+        analogWrite(DISPLAY_BL_GPIO, duty_cycle);
+    } else {
+        digitalWrite(DISPLAY_BL_GPIO, LOW);    
+    }
+}
+
+void display_brightness(uint8_t brightness) {
+    _display_brightness = constrain(brightness, 0, 100);
+    display_set_duty_cycle();
+}
+
+uint8_t display_brightness() {
+    return _display_brightness;
+}
+
 void display_off() {
-    digitalWrite(DISPLAY_BL_GPIO, LOW);
     digitalWrite(DISPLAY_EN_GPIO, LOW);
+    display_set_duty_cycle();
     _display_screen.enableSleep(true);
 }
 
 void display_on() {
     _display_screen.enableSleep(false);
     digitalWrite(DISPLAY_EN_GPIO, HIGH);
-    digitalWrite(DISPLAY_BL_GPIO, HIGH);
+    display_set_duty_cycle();
 }
 
 // ----------------------------------------------------------------------------
