@@ -214,39 +214,13 @@ void ganv2_data_send_raw(uint8_t* data, uint16_t len) {
 
 bool ganv2_start(uint16_t conn_handle) {
 
-     // Discover GAN v2 data service (only one supported right now)
-    if ( !_ganv2_service_data.discover(conn_handle) ) {
-        #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 data service not found. Skipping.");
-        #endif
-        return false;
-    }
-    #if DEBUG > 0
-        Serial.println("[GAN] GAN v2 data service found.");
-    #endif
+    // Discover services & characteristics
+    if (!bluetooth_discover_service(_ganv2_service_data, "GAN", "data")) return false;
+    if (!bluetooth_discover_characteristic(_ganv2_characteristic_write, "GAN", "write")) return false;
+    if (!bluetooth_discover_characteristic(_ganv2_characteristic_read, "GAN", "read")) return false;
 
-    // Discover GAN v2 write characteristic
-    if ( ! _ganv2_characteristic_write.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 write characteristic not found. Skipping.");
-        #endif
-        return false;
-    }
-    #if DEBUG > 0
-        Serial.println("[GAN] GAN v2 write characteristic found.");
-    #endif
-
-    // Discover GAN v2 read characteristic
-    if ( ! _ganv2_characteristic_read.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 read characteristic not found. Skipping.");
-        #endif
-        return false;
-    }
+    // Enable notifications
     _ganv2_characteristic_read.enableNotify();
-    #if DEBUG > 0
-        Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
-    #endif
 
     // Get cube type
     uint8_t version = (strncmp(bluetooth_peer_name(), "AiCube", 6) == 0) ? 1 : 0;

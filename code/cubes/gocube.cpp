@@ -132,39 +132,13 @@ void gocube_data_send_raw(uint8_t* data, uint16_t len) {
 
 bool gocube_start(uint16_t conn_handle) {
 
-     // Discover GOCUBE data service (only one supported right now)
-    if ( !_gocube_service_data.discover(conn_handle) ) {
-        #if DEBUG > 0
-            Serial.println("[GOC] GOCUBE data service not found. Skipping.");
-        #endif
-        return false;
-    }
-    #if DEBUG > 0
-        Serial.println("[GOC] GOCUBE data service found.");
-    #endif
+    // Discover services & characteristics
+    if (!bluetooth_discover_service(_gocube_service_data, "GOC", "data")) return false;
+    if (!bluetooth_discover_characteristic(_gocube_characteristic_write, "GOC", "write")) return false;
+    if (!bluetooth_discover_characteristic(_gocube_characteristic_read, "GOC", "read")) return false;
 
-    // Discover GOCUBE write characteristic
-    if ( ! _gocube_characteristic_write.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GOC] GOCUBE write characteristic not found. Skipping.");
-        #endif
-        return false;
-    }
-    #if DEBUG > 0
-        Serial.println("[GOC] GOCUBE write characteristic found.");
-    #endif
-
-    // Discover GOCUBE read characteristic
-    if ( ! _gocube_characteristic_read.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GOC] GOCUBE read characteristic not found. Skipping.");
-        #endif
-        return false;
-    }
+    // Enable notifications
     _gocube_characteristic_read.enableNotify();
-    #if DEBUG > 0
-        Serial.println("[GOC] GOCUBE read characteristic found. Subscribed.");
-    #endif
 
     // Query the cube
     gocube_data_send(GOCUBE_GET_STATE);

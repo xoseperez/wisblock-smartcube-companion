@@ -215,64 +215,17 @@ void giiker_data_send_raw(uint8_t* data, uint16_t len) {
 
 bool giiker_start(uint16_t conn_handle) {
 
-     // Discover Giiker data service (only one supported right now)
-    if ( !_giiker_service_data.discover(conn_handle) ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GIIKER data service not found. Skipping.");
-        #endif
-        return false;
-    }
-    #if DEBUG > 0
-        Serial.println("[GII] GIIKER data service found.");
-    #endif
-
-    // Discover Giiker data characteristic
-    if ( ! _giiker_characteristic_data.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GIIKER data characteristic not found. Skipping.");
-        #endif
-        return false;
-    }
-    _giiker_characteristic_data.enableNotify();
-    #if DEBUG > 0
-        Serial.println("[GII] GIIKER data characteristic found. Subscribed.");
-    #endif
-
+    // Discover services & characteristics
+    if (!bluetooth_discover_service(_giiker_service_data, "GII", "data")) return false;
+    if (!bluetooth_discover_characteristic(_giiker_characteristic_data, "GII", "data")) return false;
     // For the battery services, even if we don't find them we go on
+    if (!bluetooth_discover_service(_giiker_service_rw, "GII", "rw")) return false;
+    if (!bluetooth_discover_characteristic(_giiker_characteristic_write, "GII", "write")) return false;
+    if (!bluetooth_discover_characteristic(_giiker_characteristic_read, "GII", "read")) return false;
 
-    // Discover Giiker rw service (only one supported right now)
-    if ( !_giiker_service_rw.discover(conn_handle) ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GIIKER rw service not found. Skipping.");
-        #endif
-        return true;
-    }
-    #if DEBUG > 0
-        Serial.println("[GII] GIIKER rw service found.");
-    #endif
-
-    // Discover Giiker write characteristic
-    if ( ! _giiker_characteristic_write.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GIIKER write characteristic not found.");
-        #endif
-        return true;
-    }
-    #if DEBUG > 0
-        Serial.println("[GII] GIIKER write characteristic found.");
-    #endif
-
-    // Discover Giiker read characteristic
-    if ( ! _giiker_characteristic_read.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GIIKER read characteristic not found.");
-        #endif
-        return true;
-    }
+    // Enable notifications
+    _giiker_characteristic_data.enableNotify();
     _giiker_characteristic_read.enableNotify();
-    #if DEBUG > 0
-        Serial.println("[GII] GIIKER read characteristic found. Subscribed.");
-    #endif
 
     // Get info
     giiker_data_send(GIIKER_GET_FIRMWARE);

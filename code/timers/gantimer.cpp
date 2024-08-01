@@ -75,28 +75,12 @@ BLEClientCharacteristic _gantimer_characteristic_data(GANTIMER_UUID_CHARACTERIST
 
 bool gantimer_start(uint16_t conn_handle) {
 
-     // Discover GanTimer data service (only one supported right now)
-    if ( !_gantimer_service_data.discover(conn_handle) ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GANTIMER data service not found. Skipping.");
-        #endif
-        return false;
-    }
-    #if DEBUG > 0
-        Serial.println("[GII] GANTIMER data service found.");
-    #endif
+    // Discover services & characteristics
+    if (!bluetooth_discover_service(_gantimer_service_data, "GNT", "data")) return false;
+    if (!bluetooth_discover_characteristic(_gantimer_characteristic_data, "GNT", "data")) return false;
 
-    // Discover GanTimer data characteristic
-    if ( ! _gantimer_characteristic_data.discover() ) {
-        #if DEBUG > 0
-            Serial.println("[GII] GANTIMER data characteristic not found. Skipping.");
-        #endif
-        return false;
-    }
+    // Enable notifications
     _gantimer_characteristic_data.enableNotify();
-    #if DEBUG > 0
-        Serial.println("[GII] GANTIMER data characteristic found. Subscribed.");
-    #endif
 
     // Send connect callback
     _gantimer_state = TIMER_STATE_WAITING;
