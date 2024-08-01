@@ -215,9 +215,9 @@ void ganv2_data_send_raw(uint8_t* data, uint16_t len) {
 bool ganv2_start(uint16_t conn_handle) {
 
     // Discover services & characteristics
-    if (!bluetooth_discover_service(_ganv2_service_data, "GAN", "data")) return false;
-    if (!bluetooth_discover_characteristic(_ganv2_characteristic_write, "GAN", "write")) return false;
-    if (!bluetooth_discover_characteristic(_ganv2_characteristic_read, "GAN", "read")) return false;
+    if (!bluetooth_discover_service(&_ganv2_service_data, "GAN", "data")) return false;
+    if (!bluetooth_discover_characteristic(&_ganv2_characteristic_write, "GAN", "write")) return false;
+    if (!bluetooth_discover_characteristic(&_ganv2_characteristic_read, "GAN", "read")) return false;
 
     // Enable notifications
     _ganv2_characteristic_read.enableNotify();

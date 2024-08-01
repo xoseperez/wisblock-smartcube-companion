@@ -76,8 +76,8 @@ BLEClientCharacteristic _gantimer_characteristic_data(GANTIMER_UUID_CHARACTERIST
 bool gantimer_start(uint16_t conn_handle) {
 
     // Discover services & characteristics
-    if (!bluetooth_discover_service(_gantimer_service_data, "GNT", "data")) return false;
-    if (!bluetooth_discover_characteristic(_gantimer_characteristic_data, "GNT", "data")) return false;
+    if (!bluetooth_discover_service(&_gantimer_service_data, "GNT", "data")) return false;
+    if (!bluetooth_discover_characteristic(&_gantimer_characteristic_data, "GNT", "data")) return false;
 
     // Enable notifications
     _gantimer_characteristic_data.enableNotify();

@@ -216,12 +216,12 @@ void giiker_data_send_raw(uint8_t* data, uint16_t len) {
 bool giiker_start(uint16_t conn_handle) {
 
     // Discover services & characteristics
-    if (!bluetooth_discover_service(_giiker_service_data, "GII", "data")) return false;
-    if (!bluetooth_discover_characteristic(_giiker_characteristic_data, "GII", "data")) return false;
+    if (!bluetooth_discover_service(&_giiker_service_data, "GII", "data")) return false;
+    if (!bluetooth_discover_characteristic(&_giiker_characteristic_data, "GII", "data")) return false;
     // For the battery services, even if we don't find them we go on
-    if (!bluetooth_discover_service(_giiker_service_rw, "GII", "rw")) return false;
-    if (!bluetooth_discover_characteristic(_giiker_characteristic_write, "GII", "write")) return false;
-    if (!bluetooth_discover_characteristic(_giiker_characteristic_read, "GII", "read")) return false;
+    if (!bluetooth_discover_service(&_giiker_service_rw, "GII", "rw")) return false;
+    if (!bluetooth_discover_characteristic(&_giiker_characteristic_write, "GII", "write")) return false;
+    if (!bluetooth_discover_characteristic(&_giiker_characteristic_read, "GII", "read")) return false;
 
     // Enable notifications
     _giiker_characteristic_data.enableNotify();

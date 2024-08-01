@@ -13,8 +13,8 @@ typedef volatile uint32_t REG32;
 unsigned char * bluetooth_local_addr();
 unsigned char * bluetooth_peer_addr();
 char * bluetooth_peer_name();
-bool bluetooth_discover_service(BLEClientService service, const char * header, const char * name);
-bool bluetooth_discover_characteristic(BLEClientCharacteristic characteristic, const char * header, const char * name);
+bool bluetooth_discover_service(BLEClientService * service, const char * header, const char * name);
+bool bluetooth_discover_characteristic(BLEClientCharacteristic * characteristic, const char * header, const char * name);
 
 void bluetooth_setup();
 void bluetooth_loop();

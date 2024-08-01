@@ -133,9 +133,9 @@ void gocube_data_send_raw(uint8_t* data, uint16_t len) {
 bool gocube_start(uint16_t conn_handle) {
 
     // Discover services & characteristics
-    if (!bluetooth_discover_service(_gocube_service_data, "GOC", "data")) return false;
-    if (!bluetooth_discover_characteristic(_gocube_characteristic_write, "GOC", "write")) return false;
-    if (!bluetooth_discover_characteristic(_gocube_characteristic_read, "GOC", "read")) return false;
+    if (!bluetooth_discover_service(&_gocube_service_data, "GOC", "data")) return false;
+    if (!bluetooth_discover_characteristic(&_gocube_characteristic_write, "GOC", "write")) return false;
+    if (!bluetooth_discover_characteristic(&_gocube_characteristic_read, "GOC", "read")) return false;
 
     // Enable notifications
     _gocube_characteristic_read.enableNotify();
