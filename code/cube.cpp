@@ -3,6 +3,7 @@
 #include "config.h"
 #include "cube.h"
 #include "ring.h"
+#include "cubes/gan.h"
 #include "cubes/ganv2.h"
 #include "cubes/giiker.h"
 #include "cubes/gocube.h"
@@ -68,6 +69,7 @@ bool cube_bind(uint8_t conn_handle) {
     _cube_connected = _cube_connected || ganv2_start(conn_handle);
     _cube_connected = _cube_connected || giiker_start(conn_handle);
     _cube_connected = _cube_connected || gocube_start(conn_handle);
+    _cube_connected = _cube_connected || gan_start(conn_handle);
 
     if (_cube_connected && _cube_callback) _cube_callback(CUBE_EVENT_CONNECTED, nullptr);
     return _cube_connected;
@@ -86,6 +88,7 @@ void cube_setup() {
     ganv2_init();
     giiker_init();
     gocube_init();
+    gan_init();
     randomSeed(analogRead(WB_A1));
 }
 

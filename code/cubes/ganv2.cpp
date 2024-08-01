@@ -85,7 +85,7 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
     if (aes128_decode(data, len)) {
 
         #if DEBUG > 2
-            Serial.printf("[GAN] Received: ");
+            Serial.printf("[GANv2] Received: ");
             for (uint16_t i=0; i<len; i++) {
                 Serial.printf("%02X", data[i]);
             }
@@ -145,17 +145,17 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
             bool gyro = (data[13] & 0x80) == 0x80;
 
             #if DEBUG > 0
-                Serial.printf("[GAN] Hardware info message received\n");
-                Serial.printf("[GAN] Device name     : %s\n", device);
-                Serial.printf("[GAN] Hardware version: %d.%d\n", data[1], data[2]);
-                Serial.printf("[GAN] Software version: %d.%d\n", data[3], data[4]);
-                Serial.printf("[GAN] Gyro enabled    : %s\n", gyro ? "yes": "no");
+                Serial.printf("[GANv2] Hardware info message received\n");
+                Serial.printf("[GANv2] Device name     : %s\n", device);
+                Serial.printf("[GANv2] Hardware version: %d.%d\n", data[1], data[2]);
+                Serial.printf("[GANv2] Software version: %d.%d\n", data[3], data[4]);
+                Serial.printf("[GANv2] Gyro enabled    : %s\n", gyro ? "yes": "no");
             #endif
 
         } else if (9 == mode) { // Battery
 
             #if DEBUG > 0
-                Serial.printf("[GAN] Battery         : %d%%\n", data[1]);
+                Serial.printf("[GANv2] Battery         : %d%%\n", data[1]);
             #endif
 
             cube_set_battery(data[1]);
@@ -169,7 +169,7 @@ void ganv2_data_callback(uint8_t* data, uint16_t len) {
 void ganv2_data_send(uint8_t* data, uint16_t len) {
 
     #if DEBUG > 1
-        Serial.printf("[GAN] Sending: 0x");
+        Serial.printf("[GANv2] Sending: 0x");
         for (uint16_t i=0; i<len; i++) {
             Serial.printf("%02X", data[i]);
         }
@@ -217,44 +217,44 @@ bool ganv2_start(uint16_t conn_handle) {
      // Discover GAN v2 data service (only one supported right now)
     if ( !_ganv2_service_data.discover(conn_handle) ) {
         #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 data service not found. Skipping.");
+            Serial.println("[GANv2] GAN v2 data service not found. Skipping.");
         #endif
         return false;
     }
     #if DEBUG > 0
-        Serial.println("[GAN] GAN v2 data service found.");
+        Serial.println("[GANv2] GAN v2 data service found.");
     #endif
 
     // Discover GAN v2 write characteristic
     if ( ! _ganv2_characteristic_write.discover() ) {
         #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 write characteristic not found. Skipping.");
+            Serial.println("[GANv2] GAN v2 write characteristic not found. Skipping.");
         #endif
         return false;
     }
     #if DEBUG > 0
-        Serial.println("[GAN] GAN v2 write characteristic found.");
+        Serial.println("[GANv2] GAN v2 write characteristic found.");
     #endif
 
     // Discover GAN v2 read characteristic
     if ( ! _ganv2_characteristic_read.discover() ) {
         #if DEBUG > 0
-            Serial.println("[GAN] GAN v2 read characteristic not found. Skipping.");
+            Serial.println("[GANv2] GAN v2 read characteristic not found. Skipping.");
         #endif
         return false;
     }
     _ganv2_characteristic_read.enableNotify();
     #if DEBUG > 0
-        Serial.println("[GAN] GAN v2 read characteristic found. Subscribed.");
+        Serial.println("[GANv2] GAN v2 read characteristic found. Subscribed.");
     #endif
 
     // Get cube type
     uint8_t version = (strncmp(bluetooth_peer_name(), "AiCube", 6) == 0) ? 1 : 0;
     #if DEBUG > 0
         if (0 == version) {
-            Serial.println("[GAN] Identified as GAN cube.");
+            Serial.println("[GANv2] Identified as GAN cube.");
         } else {
-            Serial.println("[GAN] Identified as MOYU AI cube.");
+            Serial.println("[GANv2] Identified as MOYU AI cube.");
         }
     #endif
 
