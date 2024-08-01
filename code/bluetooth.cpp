@@ -38,6 +38,32 @@ bool bluetooth_connected() {
     return Bluefruit.Central.connected(_bluetooth_handle);
 }
 
+bool bluetooth_discover_service(BLEClientService service, const char * header, const char * name) {
+    if ( !service.discover(_bluetooth_handle) ) {
+        #if DEBUG > 0
+            Serial.printf("[%s] Service '%s' not found. Skipping.\n", header, name);
+        #endif
+        return false;
+    }
+    #if DEBUG > 0
+        Serial.printf("[%s] Service '%s' found.\n", header, name);
+    #endif
+    return true;
+}
+
+bool bluetooth_discover_characteristic(BLEClientCharacteristic characteristic, const char * header, const char * name) {
+    if ( !characteristic.discover() ) {
+        #if DEBUG > 0
+            Serial.printf("[%s] Characteristic '%s' not found. Skipping.\n", header, name);
+        #endif
+        return false;
+    }
+    #if DEBUG > 0
+        Serial.printf("[%s] Characteristic '%s' found.\n", header, name);
+    #endif
+    return true;
+}
+
 // ----------------------------------------------------------------------------
 // Bluetooth callbacks
 // ----------------------------------------------------------------------------
